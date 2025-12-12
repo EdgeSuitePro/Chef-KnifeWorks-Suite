@@ -182,6 +182,38 @@ app.put('/api/reservations/:id/status', (req, res) => {
     });
 });
 
+// Generic Update Endpoint
+app.put('/api/reservations/:id', (req, res) => {
+  const reservationId = req.params.id;
+  const updates = req.body;
+  
+  const allowedFields = ['knife_quantity', 'notes', 'photos', 'actual_quantity', 'status'];
+  const fieldsToUpdate = Object.keys(updates).filter(key => allowedFields.includes(key));
+  
+  if (fieldsToUpdate.length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+  }
+  
+  const setClause = fieldsToUpdate.map(field => `${field} = ?`).join(', ');
+  const values = fieldsToUpdate.map(field => {
+      const val = updates[field];
+      return typeof val === 'object' ? JSON.stringify(val) : val;
+  });
+  
+  values.push(reservationId);
+  
+  db.run(`UPDATE reservations SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`, 
+    values, 
+    function(err) {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json({ success: true, message: 'Reservation updated' });
+    }
+  );
+});
+
 app.put('/api/reservations/:id/check-in', (req, res) => {
   const reservationId = req.params.id;
   const { actualQuantity, photos, checkInTime } = req.body;

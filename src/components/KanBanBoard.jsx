@@ -18,7 +18,8 @@ const {
   FiEdit2,
   FiCamera,
   FiSave,
-  FiX
+  FiX,
+  FiImage
 } = FiIcons;
 
 const KanBanBoard = ({ reservations, stages, onMoveReservation, onOpenPOS, onUpdateStatus, onOpenClientDetails, onUpdateReservation }) => {
@@ -47,6 +48,12 @@ const KanBanBoard = ({ reservations, stages, onMoveReservation, onOpenPOS, onUpd
     setDragOverStage(null);
     if (draggedReservation && draggedReservation.status !== targetStage) {
       onMoveReservation(draggedReservation.id, draggedReservation.status, targetStage);
+      
+      // Auto-open edit mode if moved to 'received' to verify quantity
+      if (targetStage === 'received') {
+        setExpandedCard(draggedReservation.id);
+        startEditing(draggedReservation);
+      }
     }
     setDraggedReservation(null);
   };
@@ -75,6 +82,7 @@ const KanBanBoard = ({ reservations, stages, onMoveReservation, onOpenPOS, onUpd
     setEditFormData({
       knife_quantity: reservation.knife_quantity || '',
       notes: reservation.notes || '',
+      photos: reservation.photos || [],
       id: reservation.id
     });
     setIsEditing(true);
@@ -95,15 +103,47 @@ const KanBanBoard = ({ reservations, stages, onMoveReservation, onOpenPOS, onUpd
     if (onUpdateReservation && editFormData.id) {
       onUpdateReservation(editFormData.id, {
         knife_quantity: editFormData.knife_quantity,
-        notes: editFormData.notes
+        notes: editFormData.notes,
+        photos: editFormData.photos
       });
     }
     setIsEditing(false);
   };
 
-  const handlePhotoUpload = (e) => {
-      console.log("Photo upload triggered for", expandedCard);
-      alert("Photo added to reservation (Mock)");
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Convert to Base64
+    const toBase64 = file => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+
+    try {
+      const base64Data = await toBase64(file);
+      const newPhoto = {
+        id: Date.now(),
+        name: file.name,
+        url: base64Data
+      };
+      
+      setEditFormData(prev => ({
+        ...prev,
+        photos: [...(prev.photos || []), newPhoto]
+      }));
+    } catch (error) {
+      console.error("Error uploading photo", error);
+    }
+  };
+
+  const removePhoto = (photoId) => {
+    setEditFormData(prev => ({
+      ...prev,
+      photos: prev.photos.filter(p => p.id !== photoId)
+    }));
   };
 
   return (
@@ -277,6 +317,34 @@ const KanBanBoard = ({ reservations, stages, onMoveReservation, onOpenPOS, onUpd
                                           placeholder="Add notes..."
                                         />
                                       </div>
+
+                                      {/* Photo Upload in Edit Mode */}
+                                      <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                           <label className="text-[10px] font-bold text-gray-500 uppercase">Photos</label>
+                                           <label className="cursor-pointer text-blue-600 text-[10px] hover:underline flex items-center">
+                                              <SafeIcon icon={FiCamera} className="w-3 h-3 mr-1"/> Add Photo
+                                              <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+                                           </label>
+                                        </div>
+                                        {editFormData.photos && editFormData.photos.length > 0 && (
+                                            <div className="grid grid-cols-3 gap-1">
+                                                {editFormData.photos.map(photo => (
+                                                    <div key={photo.id} className="relative group/photo aspect-square bg-gray-200 rounded overflow-hidden">
+                                                        <img src={photo.url} alt="Knife" className="w-full h-full object-cover" />
+                                                        <button 
+                                                            onClick={() => removePhoto(photo.id)}
+                                                            className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover/photo:opacity-100 transition-opacity"
+                                                        >
+                                                            <SafeIcon icon={FiX} className="w-2.5 h-2.5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                      </div>
+
+
                                       <div className="flex space-x-2 pt-1">
                                         <button onClick={saveEditing} className="flex-1 bg-damascus-bronze text-white text-xs py-2 rounded flex items-center justify-center gap-1 hover:bg-opacity-90">
                                           <SafeIcon icon={FiSave} className="w-3 h-3"/> Save
@@ -294,6 +362,20 @@ const KanBanBoard = ({ reservations, stages, onMoveReservation, onOpenPOS, onUpd
                                         </div>
                                       )}
                                       
+                                      {/* Photos Preview in View Mode */}
+                                      {reservation.photos && reservation.photos.length > 0 && (
+                                          <div className="flex gap-1 overflow-x-auto pb-1">
+                                              {reservation.photos.map((photo, i) => (
+                                                  <div key={i} className="w-10 h-10 flex-shrink-0 rounded overflow-hidden border border-gray-200">
+                                                      <img src={photo.url} alt="Thumbnail" className="w-full h-full object-cover" />
+                                                  </div>
+                                              ))}
+                                              <div className="w-10 h-10 flex-shrink-0 rounded bg-gray-50 border border-gray-200 flex items-center justify-center text-[10px] text-gray-500">
+                                                  +{reservation.photos.length}
+                                              </div>
+                                          </div>
+                                      )}
+
                                       {/* Editor Actions */}
                                       <div className="flex space-x-2 mt-2">
                                         <button 
@@ -303,10 +385,6 @@ const KanBanBoard = ({ reservations, stages, onMoveReservation, onOpenPOS, onUpd
                                           <SafeIcon icon={FiEdit2} className="w-3 h-3" />
                                           <span>Edit Qty & Notes</span>
                                         </button>
-                                        <label className="flex items-center justify-center space-x-1 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded transition-colors cursor-pointer">
-                                          <SafeIcon icon={FiCamera} className="w-3 h-3" />
-                                          <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
-                                        </label>
                                       </div>
                                     </>
                                   )}

@@ -11,7 +11,7 @@ const POSSystem = () => {
 
 const RealPOSSystem = ({ reservation, onClose, onRecordPayment }) => {
   const [knives, setKnives] = useState([]);
-  const [selectedKnifeType, setSelectedKnifeType] = useState('everyday');
+  const [selectedKnifeType, setSelectedKnifeType] = useState('chef-edge');
   const [selectedServices, setSelectedServices] = useState([]);
   
   // Discount States
@@ -30,9 +30,10 @@ const RealPOSSystem = ({ reservation, onClose, onRecordPayment }) => {
   const [paypalHandle, setPaypalHandle] = useState('chefknifeworks');
 
   const knifeTypes = [
-    { id: 'everyday', name: 'Everyday Kitchen Knife', basePrice: 12 },
-    { id: 'japanese', name: 'Japanese & Specialty', basePrice: 25 },
-    { id: 'scissors', name: 'Scissors & Shears', basePrice: 10 }
+    { id: 'chef-edge', name: 'Chef-Edge Sharpening', basePrice: 12 },
+    { id: 'pro-edge', name: 'Pro-Edge Sharpening', basePrice: 20 },
+    { id: 'signature-edge', name: 'Signature-Edge Restoration', basePrice: 40 },
+    { id: 'scissors', name: 'Scissor Sharpening', basePrice: 10 }
   ];
 
   const services = [

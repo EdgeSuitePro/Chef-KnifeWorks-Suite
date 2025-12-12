@@ -160,6 +160,37 @@ const CRMPage = () => {
     }
   };
 
+  const updateReservationDetails = async (reservationId, updates) => {
+    try {
+      if (serverStatus === 'connected') {
+        const response = await fetch(`http://localhost:3001/api/reservations/${reservationId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        });
+        if (response.ok) {
+          loadReservations();
+          return true;
+        }
+      }
+
+      // Local storage fallback
+      const reservation = reservations.find(r => r.id === reservationId);
+      if (reservation) {
+        const updatedReservation = { ...reservation, ...updates, updated_at: new Date().toISOString() };
+        const storageKey = `reservation_${reservationId}`;
+        localStorage.setItem(storageKey, JSON.stringify(updatedReservation));
+        loadReservationsFromStorage();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error updating reservation details:", error);
+      return false;
+    }
+  };
+
+
   const moveReservation = (id, currentStatus, targetStatus) => {
     if (currentStatus !== targetStatus) {
       updateReservationStatus(id, targetStatus);
@@ -167,9 +198,6 @@ const CRMPage = () => {
   };
 
   const openPOS = (reservation) => {
-    // If client details is open, we can close it or just open POS on top
-    // The current logic renders one or the other based on state.
-    // Let's ensure client details is closed if we open POS
     if (showClientDetails) setShowClientDetails(false);
     setSelectedReservation(reservation);
     setShowPOS(true);
@@ -195,7 +223,6 @@ const CRMPage = () => {
   const handleLogout = () => {
     localStorage.removeItem('crm_auth_token');
     localStorage.removeItem('crm_user');
-    // Use navigate to go back to main website (home) to avoid GET errors with hash router/server
     navigate('/');
   };
 
@@ -222,11 +249,11 @@ const CRMPage = () => {
           reservation={selectedReservation} 
           onClose={closeClientDetails} 
           onUpdateStatus={updateReservationStatus}
-          onOpenPOS={openPOS} // Pass the function to open POS
+          onOpenPOS={openPOS} 
         />
       )}
 
-      {/* Header - Uses Theme Classes */}
+      {/* Header */}
       <header className="bg-edge-white shadow-sm border-b border-steel-gray/20 flex-shrink-0 z-10">
         <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
@@ -302,7 +329,7 @@ const CRMPage = () => {
         </div>
       </header>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <main className="flex-1 overflow-x-hidden overflow-y-auto bg-whetstone-cream p-4">
         {reservations.length === 0 ? (
           <div className="bg-edge-white shadow rounded-lg p-8 text-center max-w-2xl mx-auto mt-10 border border-steel-gray/10">
@@ -328,6 +355,7 @@ const CRMPage = () => {
                 onOpenPOS={openPOS}
                 onUpdateStatus={updateReservationStatus}
                 onOpenClientDetails={openClientDetails}
+                onUpdateReservation={updateReservationDetails}
               />
             ) : (
               <div className="w-full">

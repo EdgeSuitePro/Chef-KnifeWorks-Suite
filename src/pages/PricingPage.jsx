@@ -5,55 +5,65 @@ import SafeIcon from '../common/SafeIcon';
 import KnifeIcon from '../common/KnifeIcon';
 import * as FiIcons from 'react-icons/fi';
 
-const { FiCheck, FiInfo, FiStar, FiClock, FiAward, FiZap } = FiIcons;
+const { FiCheck, FiInfo, FiStar, FiClock, FiAward, FiZap, FiScissors } = FiIcons;
 
 const PricingPage = () => {
-  // Updated Pricing Tiers based on the image
+  // Updated Pricing Tiers based on the new structure
   const pricingTiers = [
     {
-      name: 'Core Essentials',
+      name: 'Chef-Edge Sharpening',
       price: '$12',
       perUnit: 'per knife',
-      subtext: 'For Home Cooks & Everyday Kitchens',
+      subtext: 'For everyday home cooks',
       icon: KnifeIcon,
       highlight: false,
       features: [
-        'Precision machine sharpening',
-        'Minor chip repair',
-        'Micro-straightening of the edge',
+        'Includes minor repairs',
         'Satin finish',
-        'Light rust removal',
-        'Ideal for German steel, household knives, and everyday culinary use'
+        'Chef-grade sharpness',
+        'Ideal for German steel & household knives'
       ]
     },
     {
-      name: 'Premium',
-      price: '$25',
+      name: 'Pro-Edge Sharpening',
+      price: '$17–$25',
       perUnit: 'per knife',
-      subtext: 'For Culinary Professionals & Enthusiasts',
+      subtext: 'For culinary professionals or high-performance steels',
       icon: FiAward,
       highlight: false,
       features: [
-        'Pro-grade sharpening on Tormek + finishing refinement',
-        'Enhanced alignment + deburring for longer sharpness',
-        'Moderate repairs, tip reshaping, and geometry correction',
-        'Brushed satin finish',
-        'Ideal for busy chefs, food service environments, and daily use blades'
+        'Edge refinement',
+        'Retention optimization',
+        'Controlled angles',
+        'Ideal for busy chefs & daily use blades'
       ]
     },
     {
-      name: 'Specialty',
+      name: 'Signature-Edge Restoration',
       price: '$40',
       perUnit: 'per knife',
-      subtext: 'For High-End Japanese Blades & Collectors',
+      subtext: 'For high-end Japanese knives, damaged blades, and serious tuning',
       icon: FiStar,
       highlight: false,
       features: [
-        'Whetstone or CBN progression tailored to steel type',
-        'Edge restoration, thinning, and geometry enhancement',
-        'High-performance edge tuning',
-        'Rust/spot removal and cosmetic touch-ups',
-        'Ideal for SG2, Aogami, Shirogami, high-HRC steels, and heirloom blades'
+        'Whetstone/CBN work',
+        'Reprofiling & chip repair',
+        'Polishing',
+        'Ideal for SG2, Aogami, Shirogami & heirlooms'
+      ]
+    },
+    {
+      name: 'Scissor Sharpening',
+      price: 'Starting at $10',
+      perUnit: 'Each',
+      subtext: 'Culinary, Household, Tailor',
+      icon: FiScissors,
+      highlight: false,
+      features: [
+        'Clean, precise scissor edges',
+        'For kitchens, home use, and craftwork',
+        'Fabric shears & utility scissors',
+        'Tension adjustment included'
       ]
     }
   ];
@@ -82,51 +92,46 @@ const PricingPage = () => {
       {/* Pricing Tiers */}
       <section className="py-16 bg-carbon-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-16">
             {pricingTiers.map((tier, index) => (
               <motion.div
                 key={tier.name}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.2 }}
+                transition={{ delay: index * 0.1 }}
                 className="bg-steel-gray/20 border border-white/10 rounded-xl overflow-hidden flex flex-col h-full hover:border-honed-sage/50 transition-colors duration-300"
               >
                 <div className="p-8 text-center border-b border-white/5 bg-white/[0.02]">
-                  <h3 className="font-serif font-bold text-2xl mb-2 text-whetstone-cream">
+                  <div className="mb-4 flex justify-center text-honed-sage">
+                    <SafeIcon icon={tier.icon} className="w-8 h-8" />
+                  </div>
+                  <h3 className="font-serif font-bold text-xl mb-2 text-whetstone-cream h-14 flex items-center justify-center">
                     {tier.name}
                   </h3>
-                  <div className="flex items-baseline justify-center gap-1 mb-2">
-                    <span className="text-5xl font-bold text-white">{tier.price}</span>
-                    <span className="text-gray-400 text-sm">{tier.perUnit}</span>
+                  <div className="flex flex-col items-center justify-center gap-1 mb-2">
+                    <span className="text-3xl font-bold text-white">{tier.price}</span>
+                    <span className="text-gray-400 text-xs uppercase tracking-wide">{tier.perUnit}</span>
                   </div>
-                  <p className="text-honed-sage text-sm italic font-medium">
+                  <p className="text-gray-400 text-sm italic font-medium min-h-[40px]">
                     {tier.subtext}
                   </p>
                 </div>
                 
-                <div className="p-8 flex-1">
-                  <ul className="space-y-4">
+                <div className="p-6 flex-1 bg-black/20">
+                  <ul className="space-y-3">
                     {tier.features.map((feature, i) => (
                       <li key={i} className="flex items-start text-sm text-gray-300">
                         <SafeIcon
                           icon={FiCheck}
-                          className="w-5 h-5 text-honed-sage mr-3 mt-0.5 flex-shrink-0"
+                          className="w-4 h-4 text-honed-sage mr-3 mt-0.5 flex-shrink-0"
                         />
                         <span className="leading-relaxed">{feature}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
-
-                <div className="p-8 pt-0 mt-auto">
-                  <Link 
-                    to="/appointment" 
-                    className="btn-secondary w-full text-center block py-3 text-sm tracking-wider uppercase"
-                  >
-                    Book Now
-                  </Link>
-                </div>
+                {/* Book Now button removed as requested */}
               </motion.div>
             ))}
           </div>
@@ -171,7 +176,7 @@ const PricingPage = () => {
         </div>
       </section>
 
-      {/* Pricing Philosophy (Retained from previous update) */}
+      {/* Pricing Philosophy */}
       <section className="py-16 bg-steel-gray text-whetstone-cream border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
@@ -203,7 +208,7 @@ const PricingPage = () => {
                   <div className="w-16 h-16 bg-damascus-bronze rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                     <SafeIcon icon={FiClock} className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="font-semibold text-lg mb-2">Next-Day Turnaround</h3>
+                  <h3 className="font-semibold text-lg mb-2">Next Day Pickup</h3>
                   <p className="opacity-80 text-sm">
                     Most orders are completed within 24 hours.<br/>
                     Fast, consistent, and reliable—drop off today, cook better tomorrow.
