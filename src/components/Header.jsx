@@ -10,13 +10,10 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const SQUARE_GIFT_CARD_URL = "https://app.squareup.com/gift/VKHWTKDWTQ08J/order";
 
   const navigation = [
     { name: 'Home', href: '/', anchor: 'hero' },
     { name: 'Pricing', href: '/pricing' },
-    { name: 'Lookup', href: '/lookup' },
-    { name: 'Gift Cards', href: SQUARE_GIFT_CARD_URL, external: true },
     { name: 'Contact', href: '/contact' },
   ];
 
@@ -54,7 +51,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-[#2C2C2C]/95 backdrop-blur-2xl border-b border-white/10 sticky top-0 z-50 shadow-2xl transition-all duration-300">
+    <header className="bg-[#2C2C2C]/70 backdrop-blur-md border-b border-white/5 sticky top-0 z-50 shadow-lg transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}

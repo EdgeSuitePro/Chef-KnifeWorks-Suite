@@ -5,65 +5,57 @@ import SafeIcon from '../common/SafeIcon';
 import KnifeIcon from '../common/KnifeIcon';
 import * as FiIcons from 'react-icons/fi';
 
-const { FiCheck, FiInfo, FiScissors, FiStar, FiUsers, FiClock, FiGift } = FiIcons;
+const { FiCheck, FiInfo, FiStar, FiClock, FiAward, FiZap } = FiIcons;
 
 const PricingPage = () => {
-  // Core Services Data
-  const coreServices = [
+  // Updated Pricing Tiers based on the image
+  const pricingTiers = [
     {
       name: 'Core Essentials',
       price: '$12',
-      subtext: 'volume discounts apply',
-      icon: KnifeIcon, // Using custom KnifeIcon
+      perUnit: 'per knife',
+      subtext: 'For Home Cooks & Everyday Kitchens',
+      icon: KnifeIcon,
+      highlight: false,
       features: [
-        'Includes ALL repairs',
-        'Hand sharpened to optimal angle',
-        'Honed and polished edge',
-        '24-48 hour turnaround',
-        'Suitable for all kitchen knives'
+        'Precision machine sharpening',
+        'Minor chip repair',
+        'Micro-straightening of the edge',
+        'Satin finish',
+        'Light rust removal',
+        'Ideal for German steel, household knives, and everyday culinary use'
       ]
     },
     {
-      name: 'Scissors & Shears',
-      price: 'from $10',
-      subtext: '',
-      icon: FiScissors,
+      name: 'Premium',
+      price: '$25',
+      perUnit: 'per knife',
+      subtext: 'For Culinary Professionals & Enthusiasts',
+      icon: FiAward,
+      highlight: false,
       features: [
-        'Fabric / Tailor Shears',
-        'Household Scissors',
-        'Culinary Scissors / Shears'
+        'Pro-grade sharpening on Tormek + finishing refinement',
+        'Enhanced alignment + deburring for longer sharpness',
+        'Moderate repairs, tip reshaping, and geometry correction',
+        'Brushed satin finish',
+        'Ideal for busy chefs, food service environments, and daily use blades'
       ]
     },
     {
-      name: 'Japanese & Specialty',
-      price: 'from $25',
-      subtext: '',
+      name: 'Specialty',
+      price: '$40',
+      perUnit: 'per knife',
+      subtext: 'For High-End Japanese Blades & Collectors',
       icon: FiStar,
+      highlight: false,
       features: [
-        'All Standard features',
-        'Multi-stage precision sharpening',
-        'Advanced polishing treatment',
-        'Blade conditioning',
-        'Perfect for Japanese & specialty knives',
-        'Same-day service available'
+        'Whetstone or CBN progression tailored to steel type',
+        'Edge restoration, thinning, and geometry enhancement',
+        'High-performance edge tuning',
+        'Rust/spot removal and cosmetic touch-ups',
+        'Ideal for SG2, Aogami, Shirogami, high-HRC steels, and heirloom blades'
       ]
     }
-  ];
-
-  const addOnServices = [
-    'Tip Repair',
-    'Chip Removal',
-    'Rust & Patina Removal',
-    'Polishing',
-    'Micro-bevel Conditioning',
-    'Straightening (if needed)'
-  ];
-
-  const volumeDiscounts = [
-    { range: '1–4 knives', pricing: 'Core Rate', icon: KnifeIcon },
-    { range: '5–9 knives', pricing: '10% off Core Rate', icon: FiUsers, highlight: true },
-    { range: '10–14 knives', pricing: '15% off Core Rate', icon: FiStar, highlight: true },
-    { range: '15+ knives', pricing: '20% off Core Rate', icon: FiScissors, highlight: true }
   ];
 
   return (
@@ -87,196 +79,103 @@ const PricingPage = () => {
         </div>
       </section>
 
-      {/* Core Services */}
+      {/* Pricing Tiers */}
       <section className="py-16 bg-carbon-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="font-serif font-bold text-4xl text-whetstone-cream mb-4">
-              Core Sharpening Services
-            </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Professional sharpening tailored to your blade type and condition.
-            </p>
-          </motion.div>
-
-          {/* 3 Columns Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {coreServices.map((service, index) => (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+            {pricingTiers.map((tier, index) => (
               <motion.div
-                key={service.name}
+                key={tier.name}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.2 }}
-                className={`card flex flex-col h-full transform transition-all duration-300 hover:-translate-y-2 ${
-                  index === 0 ? 'border-honed-sage shadow-lg shadow-honed-sage/10' : 'border-white/10'
-                }`}
+                className="bg-steel-gray/20 border border-white/10 rounded-xl overflow-hidden flex flex-col h-full hover:border-honed-sage/50 transition-colors duration-300"
               >
-                <div className="text-center">
-                  <div
-                    className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${
-                      index === 0
-                        ? 'bg-honed-sage'
-                        : index === 2
-                        ? 'bg-damascus-bronze'
-                        : 'bg-gray-600'
-                    }`}
-                  >
-                    <SafeIcon icon={service.icon} className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="font-serif font-bold text-xl mb-2 text-whetstone-cream">
-                    {service.name}
+                <div className="p-8 text-center border-b border-white/5 bg-white/[0.02]">
+                  <h3 className="font-serif font-bold text-2xl mb-2 text-whetstone-cream">
+                    {tier.name}
                   </h3>
-                  <div
-                    className={`text-3xl font-bold mb-1 ${
-                      index === 2 ? 'text-damascus-bronze' : 'text-honed-sage'
-                    }`}
-                  >
-                    {service.price}
+                  <div className="flex items-baseline justify-center gap-1 mb-2">
+                    <span className="text-5xl font-bold text-white">{tier.price}</span>
+                    <span className="text-gray-400 text-sm">{tier.perUnit}</span>
                   </div>
-                  {service.subtext && (
-                    <div className="text-sm text-gray-400 italic mb-4">
-                      {service.subtext}
-                    </div>
-                  )}
-                  <div className="border-t border-white/10 my-4 w-1/2 mx-auto"></div>
+                  <p className="text-honed-sage text-sm italic font-medium">
+                    {tier.subtext}
+                  </p>
                 </div>
-                <ul className="space-y-4 text-left mt-2 flex-1 px-4">
-                  {service.features.map((feature, i) => (
-                    <li key={i} className="flex items-start text-sm text-gray-300">
-                      <SafeIcon
-                        icon={FiCheck}
-                        className="w-5 h-5 text-honed-sage mr-3 mt-0.5 flex-shrink-0"
-                      />
-                      <span
-                        className={`leading-tight font-medium ${
-                          i === 0 && index === 0
-                            ? 'text-white font-bold uppercase tracking-wide'
-                            : ''
-                        }`}
-                      >
-                        {feature}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-8 text-center">
-                  <Link to="/appointment" className="btn-secondary w-full text-sm">
+                
+                <div className="p-8 flex-1">
+                  <ul className="space-y-4">
+                    {tier.features.map((feature, i) => (
+                      <li key={i} className="flex items-start text-sm text-gray-300">
+                        <SafeIcon
+                          icon={FiCheck}
+                          className="w-5 h-5 text-honed-sage mr-3 mt-0.5 flex-shrink-0"
+                        />
+                        <span className="leading-relaxed">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="p-8 pt-0 mt-auto">
+                  <Link 
+                    to="/appointment" 
+                    className="btn-secondary w-full text-center block py-3 text-sm tracking-wider uppercase"
+                  >
                     Book Now
                   </Link>
                 </div>
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* Premium Add-Ons */}
-      <section className="py-16 bg-steel-gray border-y border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Volume Discounts */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="max-w-4xl mx-auto"
           >
-            <h2 className="font-serif font-bold text-4xl text-whetstone-cream mb-4">
-              Premium Add-On Services
-            </h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Additional services to restore and enhance your blades beyond basic sharpening.
-            </p>
-          </motion.div>
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-carbon-black/50 rounded-xl p-8 border border-white/10 shadow-lg">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {addOnServices.map((service, index) => (
-                  <motion.div
-                    key={service}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex items-center space-x-3"
-                  >
-                    <div className="w-6 h-6 bg-honed-sage rounded-full flex items-center justify-center flex-shrink-0">
-                      <SafeIcon icon={FiCheck} className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="font-medium text-gray-200">{service}</span>
-                  </motion.div>
-                ))}
-              </div>
-              <div className="mt-8 pt-6 border-t border-white/10 flex items-start space-x-3">
-                <SafeIcon icon={FiInfo} className="w-5 h-5 text-damascus-bronze flex-shrink-0 mt-0.5" />
-                <p className="text-gray-400 text-sm">
-                  Add-on services are priced based on the condition and complexity of each blade. Final pricing will be discussed before any additional work begins.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+            <div className="border border-honed-sage/30 rounded-2xl p-8 md:p-12 text-center bg-gradient-to-b from-carbon-black to-steel-gray/30 relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-honed-sage to-transparent opacity-50"></div>
+              
+              <h3 className="font-serif text-3xl text-honed-sage mb-4">
+                Volume Discounts Available
+              </h3>
+              <p className="text-gray-400 mb-10">
+                Make the most of your visit — bring your whole set.
+              </p>
 
-      {/* Volume Discounts */}
-      <section className="py-16 bg-carbon-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="font-serif font-bold text-4xl text-whetstone-cream mb-4">
-              Volume Discount Structure
-            </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              The more knives you bring, the more you save. Perfect for restaurants, culinary schools, and knife enthusiasts.
-            </p>
-          </motion.div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {volumeDiscounts.map((discount, index) => (
-              <motion.div
-                key={discount.range}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className={`card text-center ${
-                  discount.highlight ? 'border-2 border-damascus-bronze shadow-lg shadow-damascus-bronze/10' : ''
-                }`}
-              >
-                {discount.highlight && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-damascus-bronze text-white px-3 py-1 rounded-full text-sm font-medium shadow-sm">
-                      Best Value
-                    </span>
-                  </div>
-                )}
-                <div className="w-12 h-12 bg-honed-sage rounded-full flex items-center justify-center mx-auto mb-4">
-                  <SafeIcon icon={discount.icon} className="w-6 h-6 text-white" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 mb-10">
+                <div className="flex flex-col items-center">
+                  <span className="text-5xl font-bold text-white mb-2">10%</span>
+                  <span className="text-gray-400 uppercase tracking-widest text-sm">5+ Knives</span>
                 </div>
-                <h3 className="font-semibold text-lg mb-2 text-whetstone-cream">
-                  {discount.range}
-                </h3>
-                <p className="text-damascus-bronze font-bold text-lg">
-                  {discount.pricing}
-                </p>
-              </motion.div>
-            ))}
-          </div>
+                <div className="flex flex-col items-center md:border-x border-white/10">
+                  <span className="text-5xl font-bold text-white mb-2">15%</span>
+                  <span className="text-gray-400 uppercase tracking-widest text-sm">10+ Knives</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="text-5xl font-bold text-white mb-2">20%</span>
+                  <span className="text-gray-400 uppercase tracking-widest text-sm">15+ Knives</span>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-500 italic">
+                Discount applied automatically after inspection.
+              </p>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Turnaround Info */}
-      <section className="py-16 bg-steel-gray text-whetstone-cream">
+      {/* Pricing Philosophy (Retained from previous update) */}
+      <section className="py-16 bg-steel-gray text-whetstone-cream border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <motion.div
+             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

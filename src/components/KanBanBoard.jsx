@@ -1,171 +1,336 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 
-const { FiPackage, FiTool, FiStar, FiCheckCircle, FiDollarSign, FiClock, FiMail, FiPhone, FiMoreVertical } = FiIcons;
+const { 
+  FiPackage, 
+  FiTool, 
+  FiStar, 
+  FiCheckCircle, 
+  FiDollarSign, 
+  FiClock, 
+  FiMail, 
+  FiPhone, 
+  FiMoreVertical,
+  FiUser,
+  FiCalendar,
+  FiEdit2,
+  FiCamera,
+  FiSave,
+  FiX
+} = FiIcons;
 
-const KanBanBoard = ({ reservations, stages, onMoveReservation, onOpenPOS, onUpdateStatus, onOpenClientDetails }) => {
+const KanBanBoard = ({ reservations, stages, onMoveReservation, onOpenPOS, onUpdateStatus, onOpenClientDetails, onUpdateReservation }) => {
   const [draggedReservation, setDraggedReservation] = useState(null);
+  const [dragOverStage, setDragOverStage] = useState(null);
   const [expandedCard, setExpandedCard] = useState(null);
+  
+  // Edit State
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState({});
 
-  const handleDragStart = (reservation) => {
+  const handleDragStart = (e, reservation) => {
     setDraggedReservation(reservation);
+    e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e, stageId) => {
     e.preventDefault();
+    if (dragOverStage !== stageId) {
+      setDragOverStage(stageId);
+    }
   };
 
   const handleDrop = (e, targetStage) => {
     e.preventDefault();
-    if (draggedReservation) {
+    setDragOverStage(null);
+    if (draggedReservation && draggedReservation.status !== targetStage) {
       onMoveReservation(draggedReservation.id, draggedReservation.status, targetStage);
-      setDraggedReservation(null);
     }
+    setDraggedReservation(null);
   };
 
   const formatTime = (timeString) => {
     if (!timeString) return '';
     const [time, period] = timeString.split(' ');
-    return `${time} ${period}`;
+    return period ? `${time} ${period}` : timeString; 
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const getPriorityColor = (qty) => {
+    const quantity = parseInt(qty) || 0;
+    if (quantity > 10) return 'bg-red-500';
+    if (quantity > 5) return 'bg-orange-400';
+    if (quantity > 0) return 'bg-blue-400';
+    return 'bg-gray-300';
+  };
+
+  const startEditing = (reservation) => {
+    setEditFormData({
+      knife_quantity: reservation.knife_quantity || '',
+      notes: reservation.notes || '',
+      id: reservation.id
+    });
+    setIsEditing(true);
+  };
+
+  const handleCardDoubleClick = (e, reservation) => {
+    e.stopPropagation();
+    setExpandedCard(reservation.id);
+    startEditing(reservation);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setEditFormData({});
+  };
+
+  const saveEditing = () => {
+    if (onUpdateReservation && editFormData.id) {
+      onUpdateReservation(editFormData.id, {
+        knife_quantity: editFormData.knife_quantity,
+        notes: editFormData.notes
+      });
+    }
+    setIsEditing(false);
+  };
+
+  const handlePhotoUpload = (e) => {
+      console.log("Photo upload triggered for", expandedCard);
+      alert("Photo added to reservation (Mock)");
   };
 
   return (
-    <div className="overflow-x-auto">
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 min-w-[1400px]">
-        {stages.map((stage) => {
-          const stageReservations = reservations.filter(r => r.status === stage.id);
-          
-          return (
-            <div key={stage.id} className="bg-gray-100 rounded-xl p-4 border border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <div className={`w-8 h-8 ${stage.color} rounded-full flex items-center justify-center shadow-sm`}>
-                    <SafeIcon icon={stage.icon} className="w-4 h-4 text-white" />
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="flex-1 overflow-x-auto overflow-y-hidden">
+        <div className="h-full flex space-x-4 min-w-max pb-4 px-2">
+          {stages.map((stage) => {
+            const stageReservations = reservations.filter(r => r.status === stage.id);
+            const isDragOver = dragOverStage === stage.id;
+            
+            return (
+              <div 
+                key={stage.id} 
+                className={`w-80 flex flex-col rounded-xl transition-colors duration-200 ${
+                  isDragOver ? 'bg-blue-50 ring-2 ring-blue-200' : 'bg-gray-50/80'
+                } border border-gray-200/60 shadow-sm backdrop-blur-sm`}
+                onDragOver={(e) => handleDragOver(e, stage.id)}
+                onDrop={(e) => handleDrop(e, stage.id)}
+              >
+                {/* Column Header */}
+                <div className={`p-3 border-b border-gray-100 flex items-center justify-between rounded-t-xl ${stage.color.replace('bg-', 'bg-opacity-10 bg-')}`}>
+                  <div className="flex items-center space-x-2">
+                    <div className={`p-1.5 rounded-md ${stage.color} text-white shadow-sm`}>
+                      <SafeIcon icon={stage.icon} className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="font-bold text-gray-700 text-sm tracking-wide">{stage.title}</span>
                   </div>
-                  <h3 className="font-semibold text-gray-800">{stage.title}</h3>
-                  <span className="bg-white px-2 py-1 rounded-full text-xs font-medium text-gray-500 border border-gray-200 shadow-sm">
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${stage.color} bg-opacity-10 text-gray-600`}>
                     {stageReservations.length}
                   </span>
                 </div>
-              </div>
-              
-              <div 
-                className={`min-h-[400px] rounded-lg border-2 border-dashed transition-colors ${draggedReservation ? 'border-damascus-bronze bg-white' : 'border-gray-300'}`}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, stage.id)}
-              >
-                <div className="space-y-3 p-2">
-                  {stageReservations.map((reservation, index) => (
-                    <motion.div
-                      key={reservation.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      draggable
-                      onDragStart={() => handleDragStart(reservation)}
-                      onDoubleClick={() => onOpenClientDetails && onOpenClientDetails(reservation)}
-                      className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all cursor-move border border-gray-200 group"
-                    >
-                      <div className="p-3">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <p className="font-mono text-xs text-damascus-bronze font-semibold">
-                              {reservation.id}
-                            </p>
-                            <p className="font-semibold text-sm text-gray-900">
-                              {reservation.customer_name}
-                            </p>
-                          </div>
-                          <div className="flex items-center space-x-1">
+                
+                {/* Cards Container */}
+                <div className="flex-1 overflow-y-auto p-2 space-y-3 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+                  <AnimatePresence>
+                    {stageReservations.map((reservation) => (
+                      <motion.div
+                        layoutId={reservation.id}
+                        key={reservation.id}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, reservation)}
+                        onDoubleClick={(e) => handleCardDoubleClick(e, reservation)}
+                        className={`
+                          group relative bg-white rounded-lg border shadow-sm hover:shadow-md transition-all cursor-grab active:cursor-grabbing select-none
+                          ${expandedCard === reservation.id ? 'ring-2 ring-damascus-bronze/20 z-10' : 'border-gray-200'}
+                          ${draggedReservation?.id === reservation.id ? 'opacity-50 rotate-3' : 'opacity-100'}
+                        `}
+                      >
+                        {/* Status Stripe */}
+                        <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${getPriorityColor(reservation.knife_quantity)} opacity-70`}></div>
+
+                        <div className="p-3 pl-4">
+                          {/* Card Header */}
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <div className="flex items-center space-x-2 mb-0.5">
+                                <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider">
+                                  #{reservation.id.slice(0, 6)}
+                                </span>
+                                {reservation.created_at && (
+                                  <span className="text-[10px] text-gray-400 bg-gray-50 px-1 rounded">
+                                    {formatDate(reservation.created_at)}
+                                  </span>
+                                )}
+                              </div>
+                              <h4 className="font-semibold text-gray-800 text-sm leading-tight group-hover:text-damascus-bronze transition-colors">
+                                {reservation.customer_name}
+                              </h4>
+                            </div>
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setExpandedCard(expandedCard === reservation.id ? null : reservation.id);
+                                setIsEditing(false); // Reset edit mode when toggling card
                               }}
-                              className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-gray-600"
+                              className="text-gray-300 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
                             >
-                              <SafeIcon icon={FiMoreVertical} className="w-3 h-3" />
+                              <SafeIcon icon={FiMoreVertical} className="w-4 h-4" />
                             </button>
                           </div>
-                        </div>
 
-                        <div className="space-y-1 text-xs">
-                          <div className="flex items-center space-x-2">
-                            <SafeIcon icon={FiPackage} className="w-3 h-3 text-gray-400" />
-                            <span className="text-gray-600">{reservation.knife_quantity}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <SafeIcon icon={FiClock} className="w-3 h-3 text-gray-400" />
-                            <span className="text-gray-600">{formatTime(reservation.drop_off_time)}</span>
-                          </div>
-                        </div>
-
-                        {/* Mobile visible hint */}
-                        <div className="md:hidden text-[10px] text-center mt-2 text-damascus-bronze opacity-0 group-hover:opacity-100 transition-opacity">
-                          Double tap for details
-                        </div>
-
-                        {expandedCard === reservation.id && (
-                          <motion.div 
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            className="mt-3 pt-3 border-t border-gray-100 space-y-2"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <SafeIcon icon={FiMail} className="w-3 h-3 text-gray-400" />
-                              <span className="text-xs text-gray-600 truncate">{reservation.email}</span>
+                          {/* Key Details Grid */}
+                          <div className="grid grid-cols-2 gap-2 mb-3">
+                            <div className="flex items-center space-x-1.5 text-xs text-gray-600 bg-gray-50 p-1.5 rounded border border-gray-100/50">
+                              <SafeIcon icon={FiPackage} className="text-gray-400 w-3.5 h-3.5" />
+                              <span className="font-medium">
+                                {reservation.knife_quantity ? `${reservation.knife_quantity} Items` : 'No Qty'}
+                              </span>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <SafeIcon icon={FiPhone} className="w-3 h-3 text-gray-400" />
-                              <span className="text-xs text-gray-600">{reservation.phone}</span>
+                            <div className="flex items-center space-x-1.5 text-xs text-gray-600 bg-gray-50 p-1.5 rounded border border-gray-100/50">
+                              <SafeIcon icon={FiClock} className="text-gray-400 w-3.5 h-3.5" />
+                              <span className="truncate">{formatTime(reservation.drop_off_time)}</span>
                             </div>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onOpenClientDetails(reservation);
-                              }}
-                              className="w-full mt-2 text-center text-xs bg-gray-50 text-gray-700 py-1.5 rounded hover:bg-gray-100 border border-gray-200"
-                            >
-                              Open Client Card
-                            </button>
-                          </motion.div>
-                        )}
+                          </div>
 
-                        <div className="flex space-x-2 mt-3">
-                          {stage.id !== 'picked-up' && (
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onOpenPOS(reservation);
-                              }}
-                              className="flex-1 bg-damascus-bronze text-white px-2 py-1.5 rounded text-xs font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center space-x-1 shadow-sm"
-                            >
-                              <SafeIcon icon={FiDollarSign} className="w-3 h-3" />
-                              <span>POS</span>
-                            </button>
-                          )}
-                          {stage.id === 'ready' && (
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onUpdateStatus(reservation.id, 'picked-up');
-                              }}
-                              className="flex-1 bg-honed-sage text-white px-2 py-1.5 rounded text-xs font-medium hover:bg-opacity-90 transition-colors shadow-sm"
-                            >
-                              Complete
-                            </button>
-                          )}
+                          {/* Quick Actions (Always Visible) */}
+                          <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-gray-50">
+                             {stage.id !== 'picked-up' && (
+                                <button 
+                                  onClick={() => onOpenPOS(reservation)}
+                                  className="flex-1 flex items-center justify-center space-x-1.5 bg-gray-50 hover:bg-damascus-bronze hover:text-white text-gray-600 py-1.5 rounded text-xs font-medium transition-colors border border-gray-200 hover:border-transparent group/btn"
+                                >
+                                  <SafeIcon icon={FiDollarSign} className="w-3.5 h-3.5" />
+                                  <span>POS</span>
+                                </button>
+                             )}
+                             {stage.id === 'ready' && (
+                                <button 
+                                  onClick={() => onUpdateStatus(reservation.id, 'picked-up')}
+                                  className="flex-1 flex items-center justify-center space-x-1.5 bg-honed-sage/10 hover:bg-honed-sage text-honed-sage hover:text-white py-1.5 rounded text-xs font-medium transition-colors border border-honed-sage/20 hover:border-transparent"
+                                >
+                                  <SafeIcon icon={FiCheckCircle} className="w-3.5 h-3.5" />
+                                  <span>Finish</span>
+                                </button>
+                             )}
+                             <button 
+                                onClick={() => onOpenClientDetails(reservation)}
+                                className="px-2 py-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
+                                title="Client Details"
+                             >
+                               <SafeIcon icon={FiUser} className="w-4 h-4" />
+                             </button>
+                          </div>
+
+                          {/* Expanded Details */}
+                          <AnimatePresence>
+                            {(expandedCard === reservation.id) && (
+                              <motion.div 
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="mt-3 pt-3 border-t border-gray-100 space-y-3 pb-1">
+                                  {/* Contact Info */}
+                                  <div className="space-y-1">
+                                    <div className="flex items-center space-x-2 text-xs text-gray-500">
+                                      <SafeIcon icon={FiMail} className="w-3.5 h-3.5 text-gray-400" />
+                                      <span className="truncate">{reservation.email}</span>
+                                    </div>
+                                    <div className="flex items-center space-x-2 text-xs text-gray-500">
+                                      <SafeIcon icon={FiPhone} className="w-3.5 h-3.5 text-gray-400" />
+                                      <span>{reservation.phone}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Edit Mode / View Mode */}
+                                  {isEditing && editFormData.id === reservation.id ? (
+                                    <div className="bg-gray-50 p-2 rounded border border-gray-200 space-y-2">
+                                      <div>
+                                        <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Knife Quantity</label>
+                                        <input 
+                                          type="number" 
+                                          autoFocus
+                                          placeholder="Enter quantity"
+                                          value={editFormData.knife_quantity}
+                                          onChange={(e) => setEditFormData({...editFormData, knife_quantity: e.target.value})}
+                                          className="w-full text-sm p-2 border border-blue-200 rounded focus:ring-2 focus:ring-blue-100 outline-none"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Notes</label>
+                                        <textarea 
+                                          value={editFormData.notes}
+                                          onChange={(e) => setEditFormData({...editFormData, notes: e.target.value})}
+                                          className="w-full text-xs p-2 border border-gray-300 rounded h-16 focus:ring-2 focus:ring-blue-100 outline-none"
+                                          placeholder="Add notes..."
+                                        />
+                                      </div>
+                                      <div className="flex space-x-2 pt-1">
+                                        <button onClick={saveEditing} className="flex-1 bg-damascus-bronze text-white text-xs py-2 rounded flex items-center justify-center gap-1 hover:bg-opacity-90">
+                                          <SafeIcon icon={FiSave} className="w-3 h-3"/> Save
+                                        </button>
+                                        <button onClick={cancelEditing} className="px-3 bg-gray-200 text-gray-600 text-xs py-2 rounded hover:bg-gray-300">
+                                          Cancel
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      {reservation.notes && (
+                                        <div className="text-xs text-gray-500 bg-yellow-50 p-2 rounded border border-yellow-100 italic">
+                                          "{reservation.notes}"
+                                        </div>
+                                      )}
+                                      
+                                      {/* Editor Actions */}
+                                      <div className="flex space-x-2 mt-2">
+                                        <button 
+                                          onClick={() => startEditing(reservation)}
+                                          className="flex items-center space-x-1 text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded transition-colors flex-1 justify-center"
+                                        >
+                                          <SafeIcon icon={FiEdit2} className="w-3 h-3" />
+                                          <span>Edit Qty & Notes</span>
+                                        </button>
+                                        <label className="flex items-center justify-center space-x-1 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded transition-colors cursor-pointer">
+                                          <SafeIcon icon={FiCamera} className="w-3 h-3" />
+                                          <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
+                                        </label>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                  
+                  {/* Empty State / Drop Target Hint */}
+                  {stageReservations.length === 0 && (
+                    <div className={`h-32 rounded-lg border-2 border-dashed flex flex-col items-center justify-center text-gray-300 transition-colors ${isDragOver ? 'border-blue-300 bg-blue-50/50' : 'border-gray-200'}`}>
+                      <SafeIcon icon={FiPackage} className="w-6 h-6 mb-2 opacity-50" />
+                      <span className="text-xs font-medium">Drop here</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );

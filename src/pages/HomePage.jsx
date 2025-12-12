@@ -14,63 +14,164 @@ const {
   FiPackage,
   FiCheckCircle,
   FiUserCheck,
-  FiHome
+  FiHome,
+  FiAward,
+  FiArrowRight,
+  FiTool,
+  FiCheck,
+  FiExternalLink
 } = FiIcons;
+
+const DissolveCard = ({ frontContent, backContent, number }) => {
+  return (
+    <div className="group h-[300px] w-full relative">
+      {/* Front Face */}
+      <div className="absolute inset-0 h-full w-full bg-steel-gray/10 border border-white/5 rounded-xl p-8 flex flex-col items-center justify-center text-center transition-opacity duration-500 ease-in-out group-hover:opacity-0">
+        {number && (
+          <div className="absolute top-6 text-6xl font-serif font-bold text-white/[0.03] select-none">
+            {number}
+          </div>
+        )}
+        <div className="relative z-10">{frontContent}</div>
+      </div>
+
+      {/* Back Face */}
+      <div className="absolute inset-0 h-full w-full bg-steel-gray border border-damascus-bronze/30 rounded-xl p-8 flex flex-col items-center justify-center text-center shadow-xl transition-opacity duration-500 ease-in-out opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto">
+        <div className="text-gray-200 text-sm leading-relaxed font-light">
+          {backContent}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const GoogleReviewCard = ({ name, date, rating, text, image }) => (
+  <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex flex-col h-full">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-lg overflow-hidden">
+        {image ? (
+          <img src={image} alt={name} className="w-full h-full object-cover" />
+        ) : (
+          name.charAt(0)
+        )}
+      </div>
+      <div>
+        <h4 className="font-bold text-gray-900 text-sm">{name}</h4>
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span>{date}</span>
+        </div>
+      </div>
+      <div className="ml-auto">
+        <img 
+          src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" 
+          alt="Google" 
+          className="h-4 opacity-50" 
+        />
+      </div>
+    </div>
+    <div className="flex text-yellow-500 mb-3 text-sm">
+      {[...Array(5)].map((_, i) => (
+        <SafeIcon 
+          key={i} 
+          icon={FiStar} 
+          className={`w-4 h-4 ${i < rating ? 'fill-current' : 'text-gray-300'}`} 
+        />
+      ))}
+    </div>
+    <p className="text-gray-600 text-sm leading-relaxed flex-grow">
+      {text}
+    </p>
+  </div>
+);
 
 const HomePage = () => {
   const SQUARE_GIFT_CARD_URL = 'https://app.squareup.com/gift/VKHWTKDWTQ08J/order';
+  // Updated with your specific Place ID
+  const GOOGLE_REVIEW_LINK = 'https://www.google.com/maps/place/?q=place_id:ChIJZz3zJ-tHs1IRjXKZBBvsoM4'; 
 
   const features = [
     {
-      icon: FiShield,
+      icon: FiStar,
       title: 'Expert Craftsmanship',
+      subtitle: 'Professional sharpening by certified blade specialists',
       description:
         'Over 15 years of professional knife sharpening experience with attention to every detail.'
     },
     {
       icon: FiClock,
       title: 'Quick Turnaround',
+      subtitle: 'Same-day service available for most knife types',
       description:
         'Most knives sharpened within 24-48 hours. We respect your time and schedule.'
     },
     {
-      icon: FiStar,
-      title: 'Premium Quality',
+      icon: FiShield,
+      title: 'Safe & Secure',
+      subtitle: 'Fully insured handling with photo documentation',
       description:
-        'Restaurant-quality sharpening that brings your knives back to like-new condition.'
+        'Your knives are treated with the utmost care, fully insured, and tracked from drop-off to pickup.'
     },
     {
-      icon: FiMapPin,
-      title: 'Local Service',
+      icon: FiAward,
+      title: 'Quality Guarantee',
+      subtitle: '100% satisfaction guaranteed or your money back',
       description:
-        'Proudly serving Maple Grove and surrounding Minnesota communities.'
+        'Restaurant-quality sharpening that brings your knives back to like-new condition. Satisfaction guaranteed.'
     }
   ];
 
   const journeySteps = [
     {
       number: '01',
-      icon: FiCalendar,
-      title: 'Reserve',
+      title: 'Reserve Online',
+      subtitle: 'Book your preferred time slot in seconds',
       description: 'Book your drop-off time online. This lets me prepare for your arrival and ensures your knives enter the sharpening queue immediately.'
     },
     {
       number: '02',
-      icon: FiPackage,
-      title: 'Arrive + Check In',
-      description: 'Tap "I\'m Here" on the website or simply walk up to the shoppe. I\'ll step out to receive your knives personally—or guide you to our secure drop box.'
+      title: 'Drop Off',
+      subtitle: 'Bring your knives to our secure facility',
+      description: 'Tap "Check-In" on the menu or simply walk up to the shoppe. I\'ll step out to receive your knives personally—or guide you to our secure drop box.'
     },
     {
       number: '03',
-      icon: FiStar,
-      title: 'Sharpening',
+      title: 'Expert Service',
+      subtitle: 'We sharpen with precision and care',
       description: 'Each knife is inspected individually and expertly restored using chef-level precision, traditional techniques, and modern equipment.'
     },
     {
       number: '04',
-      icon: FiCheckCircle,
-      title: 'Pickup + Pay',
+      title: 'Pick Up',
+      subtitle: 'Collect your razor-sharp knives',
       description: 'You\'ll receive a message when your order is complete. Pick up anytime, day or night, and pay only for the work that was actually needed.'
+    }
+  ];
+
+  const trackerStages = [
+    { title: 'Received', icon: FiPackage },
+    { title: 'Sharpening', icon: FiTool },
+    { title: 'Finishing Touches', icon: FiStar },
+    { title: 'Ready for Pickup', icon: FiCheck }
+  ];
+
+  const googleReviews = [
+    {
+      name: "Chef Marcus",
+      date: "2 weeks ago",
+      rating: 5,
+      text: "The sharpest edges I've ever worked with. Jason's craftsmanship is truly exceptional. My entire kitchen team now uses Chef KnifeWorks exclusively.",
+    },
+    {
+      name: "Sarah Mitchell",
+      date: "1 month ago",
+      rating: 5,
+      text: "My vintage Japanese knives have never performed better. Worth every penny. The drop-off and pickup system is so convenient.",
+    },
+    {
+      name: "David Kowalski",
+      date: "3 days ago",
+      rating: 5,
+      text: "Professional service with real passion for the craft. My knives feel brand new, actually sharper than when I bought them!",
     }
   ];
 
@@ -111,6 +212,50 @@ const HomePage = () => {
         </div>
       </section>
 
+      {/* Tracker Preview Section */}
+      <section className="py-16 bg-carbon-black relative z-20 -mt-10">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-steel-gray/30 backdrop-blur-md border border-white/10 rounded-2xl p-8 md:p-12 shadow-2xl"
+          >
+            <div className="text-center mb-10">
+              <h2 className="font-serif text-3xl md:text-4xl text-whetstone-cream mb-3">
+                Track Your Knife Journey
+              </h2>
+              <p className="text-gray-400 font-light">
+                Know exactly where your knives are in the sharpening process
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 mb-10 relative">
+              {/* Connector Line (Desktop) */}
+              <div className="hidden md:block absolute top-[2.5rem] left-0 w-full h-0.5 bg-white/5 -z-10" />
+
+              {trackerStages.map((stage, index) => (
+                <div key={index} className="flex flex-col items-center text-center group">
+                  <div className="w-20 h-20 rounded-full bg-carbon-black border border-honed-sage/30 flex items-center justify-center mb-4 shadow-lg group-hover:border-honed-sage/60 transition-colors duration-300 relative z-10">
+                    <SafeIcon icon={stage.icon} className="w-8 h-8 text-honed-sage" />
+                  </div>
+                  <h3 className="text-whetstone-cream font-medium text-sm md:text-base">{stage.title}</h3>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-center">
+              <Link 
+                to="/lookup" 
+                className="btn-primary py-3 px-8 text-sm tracking-widest uppercase font-medium shadow-lg hover:shadow-damascus-bronze/20"
+              >
+                Check Your Status
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Why Choose Us */}
       <section id="why-choose-us" className="py-24 bg-carbon-black relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -121,11 +266,10 @@ const HomePage = () => {
             className="text-center mb-16"
           >
             <h2 className="font-serif text-4xl md:text-5xl text-whetstone-cream mb-6">
-              Why Choose Chef KnifeWorks?
+              Why Choose Chef KnifeWorks
             </h2>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto font-light">
-              We combine traditional craftsmanship with modern precision to deliver exceptional
-              results.
+              Experience the difference of professional knife care
             </p>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -136,22 +280,26 @@ const HomePage = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="card group text-left hover:bg-steel-gray/50"
               >
-                <div className="w-12 h-12 rounded-full bg-honed-sage/10 flex items-center justify-center mb-6 group-hover:bg-honed-sage/20 transition-colors">
-                  <SafeIcon icon={feature.icon} className="w-6 h-6 text-honed-sage" />
-                </div>
-                <h3 className="font-bold text-lg mb-3 text-whetstone-cream">{feature.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed group-hover:text-gray-300">
-                  {feature.description}
-                </p>
+                <DissolveCard
+                  frontContent={
+                    <div className="flex flex-col items-center">
+                      <div className="w-12 h-12 rounded-full bg-honed-sage/10 flex items-center justify-center mb-6">
+                        <SafeIcon icon={feature.icon} className="w-6 h-6 text-honed-sage" />
+                      </div>
+                      <h3 className="font-bold text-lg mb-3 text-whetstone-cream">{feature.title}</h3>
+                      <p className="text-gray-400 text-sm">{feature.subtitle}</p>
+                    </div>
+                  }
+                  backContent={feature.description}
+                />
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Your Knife's Journey */}
+      {/* How It Works (Renamed from Your Knife Journey) */}
       <section className="py-24 bg-carbon-black border-t border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -161,11 +309,10 @@ const HomePage = () => {
             className="text-center mb-16"
           >
             <h2 className="font-serif text-4xl md:text-5xl text-whetstone-cream mb-4">
-              Your Knife's Journey
+              How It Works
             </h2>
             <p className="text-lg text-gray-400 max-w-2xl mx-auto font-light">
-              A seamless experience tailored to you — whether you meet me at the shoppe or prefer a
-              quick, contactless drop-off.
+              From dull to razor-sharp in four simple steps
             </p>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -176,25 +323,100 @@ const HomePage = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="relative bg-steel-gray/10 border border-white/5 rounded-lg p-8 pb-10 text-center overflow-hidden group hover:bg-steel-gray/20 transition-all duration-300 hover:-translate-y-1"
               >
-                {/* Background Number */}
-                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/4 text-9xl font-serif font-bold text-white/[0.03] pointer-events-none select-none z-0">
-                  {step.number}
-                </div>
-                {/* Content */}
-                <div className="relative z-10 flex flex-col items-center h-full">
-                  <div className="w-16 h-16 mb-6 rounded-full bg-damascus-bronze/10 flex items-center justify-center border border-damascus-bronze/20 group-hover:border-damascus-bronze/50 transition-colors">
-                    <SafeIcon icon={step.icon} className="w-7 h-7 text-damascus-bronze" />
-                  </div>
-                  <h3 className="text-xl font-bold text-whetstone-cream mb-4">{step.title}</h3>
-                  <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-line">
-                    {step.description}
-                  </p>
-                </div>
+                <DissolveCard
+                  number={step.number}
+                  frontContent={
+                    <div className="flex flex-col items-center pt-8">
+                      <h3 className="text-xl font-bold text-whetstone-cream mb-4">{step.title}</h3>
+                      <p className="text-gray-400 text-sm">{step.subtitle}</p>
+                    </div>
+                  }
+                  backContent={step.description}
+                />
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Google Reviews Section */}
+      <section className="py-24 bg-gray-50 text-carbon-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <span className="bg-white px-3 py-1 rounded-full border border-gray-200 shadow-sm flex items-center gap-2 text-sm font-bold text-gray-700">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google" className="h-4" />
+                Rating
+              </span>
+              <div className="flex items-center text-yellow-500 gap-1">
+                <span className="text-gray-900 font-bold text-lg">5.0</span>
+                <SafeIcon icon={FiStar} className="fill-current w-5 h-5" />
+                <SafeIcon icon={FiStar} className="fill-current w-5 h-5" />
+                <SafeIcon icon={FiStar} className="fill-current w-5 h-5" />
+                <SafeIcon icon={FiStar} className="fill-current w-5 h-5" />
+                <SafeIcon icon={FiStar} className="fill-current w-5 h-5" />
+              </div>
+            </div>
+            <h2 className="font-serif text-4xl md:text-5xl mb-4 text-carbon-black">
+              What Our Customers Say
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto font-light">
+              Trusted by professional chefs and home cooks alike
+            </p>
+          </motion.div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {googleReviews.map((review, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <GoogleReviewCard {...review} />
+              </motion.div>
+            ))}
+          </div>
+          
+          <div className="mt-12 text-center">
+            <a 
+              href={GOOGLE_REVIEW_LINK} target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-2 text-honed-sage font-bold hover:text-damascus-bronze transition-colors"
+            >
+              See all reviews on Google <SafeIcon icon={FiExternalLink} />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Referral Program Section */}
+      <section id="loyalty" className="py-20 bg-steel-gray/10 border-t border-white/5 bg-carbon-black">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="font-serif text-4xl md:text-5xl text-whetstone-cream mb-6">
+              Edge Referral Program
+            </h2>
+            <p className="text-lg text-gray-300 mb-10 leading-relaxed font-light">
+              Refer a friend and both of you receive special rewards. Share the precision, spread the craft.
+            </p>
+            <Link 
+              to="/contact" 
+              className="inline-flex items-center gap-2 text-honed-sage border border-honed-sage hover:bg-honed-sage hover:text-carbon-black px-8 py-3 rounded transition-colors duration-300 uppercase tracking-widest text-sm font-medium"
+            >
+              Learn More <SafeIcon icon={FiArrowRight} className="w-4 h-4" />
+            </Link>
+          </motion.div>
         </div>
       </section>
 

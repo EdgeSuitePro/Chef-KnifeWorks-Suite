@@ -3,6 +3,7 @@ import { HashRouter as Router, Routes, Route, Outlet, useLocation } from 'react-
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import BottomNav from './components/BottomNav';
 import HomePage from './pages/HomePage';
 import PricingPage from './pages/PricingPage';
 import AppointmentPage from './pages/AppointmentPage';
@@ -12,7 +13,7 @@ import CRMPage from './pages/CRMPage';
 import LoginPage from './pages/LoginPage';
 import SettingsPage from './pages/SettingsPage';
 import PickupPage from './pages/PickupPage';
-import LookupPage from './pages/LookupPage'; // New Page
+import LookupPage from './pages/LookupPage'; 
 
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
@@ -37,6 +38,7 @@ const PublicLayout = () => {
         <Outlet />
       </main>
       <Footer />
+      <BottomNav />
     </div>
   );
 };
