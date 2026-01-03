@@ -416,29 +416,29 @@ const ReservationForm = () => {
                         <button
                           key={slot}
                           onClick={() => handleSlotSelection(slot)}
-                          className={`relative overflow-hidden rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center py-4 px-2 gap-1 group shadow-md ${
+                          className={`relative overflow-hidden rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center py-5 px-3 gap-1 group shadow-md ${
                             isSelected
                               ? 'bg-damascus-bronze text-white border-damascus-bronze shadow-lg scale-[1.05] z-10'
                               : 'bg-whetstone-cream text-carbon-black border-transparent hover:border-honed-sage hover:bg-white hover:shadow-lg hover:scale-[1.02]'
                           }`}
                         >
                           <span
-                            className={`text-lg font-bold font-serif ${
+                            className={`text-xl font-extrabold font-sans tracking-tight ${
                               isSelected ? 'text-white' : 'text-carbon-black'
                             }`}
                           >
                             {startTime}
                           </span>
                           <span
-                            className={`text-[10px] uppercase tracking-wider ${
+                            className={`text-[11px] uppercase tracking-wider font-bold ${
                               isSelected ? 'text-white/80' : 'text-gray-500'
                             }`}
                           >
                             Until {endTime}
                           </span>
                           {isSelected && (
-                            <div className="absolute top-1.5 right-1.5 bg-white/20 rounded-full p-0.5">
-                              <SafeIcon icon={FiCheck} className="w-3 h-3" />
+                            <div className="absolute top-2 right-2 bg-white/20 rounded-full p-0.5">
+                              <SafeIcon icon={FiCheck} className="w-3.5 h-3.5" />
                             </div>
                           )}
                         </button>
