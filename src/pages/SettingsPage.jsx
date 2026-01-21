@@ -3,44 +3,39 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import * as FiIcons from 'react-icons/fi';
 import { Link } from 'react-router-dom';
-import supabase from '../supabase/supabase';
 
-const { FiSave, FiArrowLeft, FiUser, FiLock, FiBriefcase, FiCalendar, FiCheck, FiDollarSign, FiPercent, FiTrash2, FiPlus, FiTag, FiRefreshCw } = FiIcons;
+const { FiSave, FiArrowLeft, FiUser, FiLock, FiBriefcase, FiCalendar, FiCheck, FiDollarSign, FiPercent, FiTrash2, FiPlus, FiTag } = FiIcons;
 
 const SettingsPage = () => {
   const [settings, setSettings] = useState({
     businessName: 'Chef KnifeWorks',
-    paypalHandle: 'chefknifeworks',
+    paypalHandle: 'chefknifeworks', // Default example
     googleCalendarConnected: false,
     adminUsername: 'admin',
-    adminPassword: 'SharpKnives2024!'
+    adminPassword: 'SharpKnives2024!',
+    savedDiscounts: [
+      { id: 1, name: 'Friends & Family', value: 50, type: '%' },
+      { id: 2, name: 'First Time Customer', value: 5, type: '$' }
+    ]
   });
   
-  // Coupon State
-  const [coupons, setCoupons] = useState([]);
-  const [newCoupon, setNewCoupon] = useState({ code: '', value: '', type: 'percentage' });
-  const [loadingCoupons, setLoadingCoupons] = useState(false);
-  
+  const [newDiscount, setNewDiscount] = useState({ name: '', value: '', type: '%' });
   const [saved, setSaved] = useState(false);
 
+  // Enable light theme for body
   useEffect(() => {
     document.body.classList.add('light-theme-active');
-    const storedSettings = localStorage.getItem('crm_settings');
-    if (storedSettings) setSettings(JSON.parse(storedSettings));
-    
-    fetchCoupons();
-    
     return () => {
       document.body.classList.remove('light-theme-active');
     };
   }, []);
 
-  const fetchCoupons = async () => {
-    setLoadingCoupons(true);
-    const { data, error } = await supabase.from('coupons').select('*').order('created_at', { ascending: false });
-    if (!error && data) setCoupons(data);
-    setLoadingCoupons(false);
-  };
+  useEffect(() => {
+    const storedSettings = localStorage.getItem('crm_settings');
+    if (storedSettings) {
+      setSettings(JSON.parse(storedSettings));
+    }
+  }, []);
 
   const handleChange = (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -54,165 +49,243 @@ const SettingsPage = () => {
     setTimeout(() => setSaved(false), 3000);
   };
 
-  const handleAddCoupon = async () => {
-    if (!newCoupon.code || !newCoupon.value) return;
-    
-    const { data, error } = await supabase.from('coupons').insert({
-      code: newCoupon.code.toUpperCase(),
-      discount_type: newCoupon.type,
-      discount_value: parseFloat(newCoupon.value),
-      active: true
-    }).select().single();
-
-    if (error) {
-      alert('Error adding coupon (Code might be duplicate)');
-    } else {
-      setCoupons([data, ...coupons]);
-      setNewCoupon({ code: '', value: '', type: 'percentage' });
+  const addDiscount = () => {
+    if (newDiscount.name && newDiscount.value) {
+      const updatedDiscounts = [
+        ...settings.savedDiscounts,
+        { ...newDiscount, id: Date.now() }
+      ];
+      setSettings({ ...settings, savedDiscounts: updatedDiscounts });
+      setNewDiscount({ name: '', value: '', type: '%' });
     }
   };
 
-  const handleDeleteCoupon = async (id) => {
-    await supabase.from('coupons').delete().eq('id', id);
-    setCoupons(coupons.filter(c => c.id !== id));
+  const removeDiscount = (id) => {
+    const updatedDiscounts = settings.savedDiscounts.filter(d => d.id !== id);
+    setSettings({ ...settings, savedDiscounts: updatedDiscounts });
   };
 
   return (
-    <div className="min-h-screen bg-whetstone-cream text-carbon-black p-4 md:p-8">
-      <header className="max-w-4xl mx-auto mb-8 flex items-center">
-        <Link to="/crm" className="mr-4 text-steel-gray hover:text-damascus-bronze">
-          <SafeIcon icon={FiArrowLeft} className="w-6 h-6" />
-        </Link>
-        <h1 className="font-serif font-bold text-3xl text-carbon-black">Staff Settings</h1>
+    <div className="min-h-screen bg-whetstone-cream text-carbon-black">
+      <header className="bg-edge-white text-carbon-black shadow-sm border-b border-steel-gray/20 py-4">
+        <div className="max-w-3xl mx-auto px-4 flex items-center">
+          <Link to="/crm" className="mr-4 text-steel-gray hover:text-damascus-bronze transition-colors">
+            <SafeIcon icon={FiArrowLeft} className="w-6 h-6" />
+          </Link>
+          <h1 className="font-serif font-bold text-2xl text-carbon-black">Staff Settings</h1>
+        </div>
       </header>
 
-      <main className="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Col: General Settings */}
-        <div className="lg:col-span-2 space-y-8">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white shadow rounded-lg p-6 border border-gray-200">
-            <h2 className="flex items-center text-xl font-semibold mb-6 border-b pb-2">
-              <SafeIcon icon={FiBriefcase} className="mr-2 text-damascus-bronze" /> Business Info
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Business Name</label>
-                <input 
-                  type="text" name="businessName" value={settings.businessName} onChange={handleChange} 
-                  className="w-full p-2 border rounded focus:ring-2 focus:ring-damascus-bronze"
-                />
+      <main className="max-w-3xl mx-auto px-4 py-8">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-edge-white shadow-sm rounded-lg p-8 border border-steel-gray/20"
+        >
+          <form onSubmit={handleSave} className="space-y-10">
+            
+            {/* Business Info */}
+            <div>
+              <div className="flex items-center space-x-2 mb-4 border-b border-steel-gray/20 pb-2">
+                <SafeIcon icon={FiBriefcase} className="text-damascus-bronze" />
+                <h2 className="text-xl font-semibold text-carbon-black">Business Info</h2>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">PayPal Handle</label>
-                <div className="flex items-center border rounded bg-gray-50">
-                  <span className="pl-3 text-gray-500 text-sm">paypal.me/</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-steel-gray mb-2">Business Name</label>
                   <input 
-                    type="text" name="paypalHandle" value={settings.paypalHandle} onChange={handleChange} 
-                    className="w-full p-2 bg-transparent border-none focus:ring-0"
+                    type="text" 
+                    name="businessName" 
+                    value={settings.businessName} 
+                    onChange={handleChange} 
+                    className="w-full px-4 py-3 border border-steel-gray/30 rounded-lg focus:ring-2 focus:ring-damascus-bronze focus:border-transparent bg-dark-input text-carbon-black" 
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-steel-gray mb-2">PayPal.me Handle</label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-sm pointer-events-none">paypal.me/</span>
+                    <input 
+                      type="text" 
+                      name="paypalHandle" 
+                      value={settings.paypalHandle || ''} 
+                      onChange={handleChange} 
+                      className="w-full pl-24 pr-4 py-3 border border-steel-gray/30 rounded-lg focus:ring-2 focus:ring-damascus-bronze focus:border-transparent bg-dark-input text-carbon-black" 
+                      placeholder="username"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Used to generate payment links for invoices.</p>
                 </div>
               </div>
             </div>
-          </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white shadow rounded-lg p-6 border border-gray-200">
-             <h2 className="flex items-center text-xl font-semibold mb-6 border-b pb-2">
-              <SafeIcon icon={FiUser} className="mr-2 text-damascus-bronze" /> Admin Credentials
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Username</label>
-                <input 
-                  type="text" name="adminUsername" value={settings.adminUsername} onChange={handleChange} 
-                  className="w-full p-2 border rounded focus:ring-2 focus:ring-damascus-bronze"
-                />
+            {/* Discount Management */}
+            <div>
+              <div className="flex items-center space-x-2 mb-4 border-b border-steel-gray/20 pb-2">
+                <SafeIcon icon={FiTag} className="text-damascus-bronze" />
+                <h2 className="text-xl font-semibold text-carbon-black">Preset Discounts</h2>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">Password</label>
-                <input 
-                  type="text" name="adminPassword" value={settings.adminPassword} onChange={handleChange} 
-                  className="w-full p-2 border rounded focus:ring-2 focus:ring-damascus-bronze"
-                />
-              </div>
-            </div>
-            <div className="mt-6">
-              <button onClick={handleSave} className="w-full btn-primary py-3 flex items-center justify-center space-x-2 text-white">
-                {saved ? <><SafeIcon icon={FiCheck} /> <span>Saved</span></> : <><SafeIcon icon={FiSave} /> <span>Save Changes</span></>}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Right Col: Coupon Management */}
-        <div className="lg:col-span-1">
-          <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} className="bg-white shadow rounded-lg p-6 border border-gray-200 h-full">
-            <div className="flex items-center justify-between mb-6 border-b pb-2">
-              <h2 className="flex items-center text-xl font-semibold">
-                <SafeIcon icon={FiTag} className="mr-2 text-damascus-bronze" /> Coupons
-              </h2>
-              <button onClick={fetchCoupons} className="text-gray-400 hover:text-damascus-bronze">
-                <SafeIcon icon={FiRefreshCw} className={loadingCoupons ? "animate-spin" : ""} />
-              </button>
-            </div>
-
-            {/* Add Coupon Form */}
-            <div className="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-100">
-              <h3 className="text-sm font-bold text-gray-700 mb-3">Create New Coupon</h3>
-              <div className="space-y-3">
-                <input 
-                  type="text" placeholder="Code (e.g. WELCOME)" 
-                  value={newCoupon.code} onChange={e => setNewCoupon({...newCoupon, code: e.target.value})}
-                  className="w-full p-2 text-sm border rounded uppercase"
-                />
-                <div className="flex space-x-2">
-                  <input 
-                    type="number" placeholder="Value" 
-                    value={newCoupon.value} onChange={e => setNewCoupon({...newCoupon, value: e.target.value})}
-                    className="w-2/3 p-2 text-sm border rounded"
-                  />
-                  <select 
-                    value={newCoupon.type} onChange={e => setNewCoupon({...newCoupon, type: e.target.value})}
-                    className="w-1/3 p-2 text-sm border rounded"
-                  >
-                    <option value="percentage">%</option>
-                    <option value="fixed">$</option>
-                  </select>
-                </div>
-                <button 
-                  onClick={handleAddCoupon}
-                  disabled={!newCoupon.code || !newCoupon.value}
-                  className="w-full bg-honed-sage text-white py-2 rounded text-sm font-bold hover:bg-opacity-90 disabled:opacity-50"
-                >
-                  Add Coupon
-                </button>
-              </div>
-            </div>
-
-            {/* Coupon List */}
-            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
-              {coupons.map(coupon => (
-                <div key={coupon.id} className="flex justify-between items-center p-3 bg-white border border-gray-100 rounded shadow-sm">
-                  <div>
-                    <p className="font-bold text-gray-800">{coupon.code}</p>
-                    <p className="text-xs text-gray-500">
-                      {coupon.discount_type === 'percentage' ? `${coupon.discount_value}% Off` : `$${coupon.discount_value} Off`}
-                    </p>
+              
+              <div className="bg-whetstone-cream rounded-lg p-4 border border-steel-gray/10 mb-4">
+                <div className="flex flex-col md:flex-row gap-3 items-end">
+                  <div className="flex-grow w-full">
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Discount Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Summer Sale" 
+                      value={newDiscount.name}
+                      onChange={(e) => setNewDiscount({...newDiscount, name: e.target.value})}
+                      className="w-full px-3 py-2 border border-steel-gray/30 rounded-md text-sm"
+                    />
+                  </div>
+                  <div className="w-full md:w-32">
+                     <label className="block text-xs font-semibold text-gray-500 mb-1">Value</label>
+                     <input 
+                      type="number" 
+                      placeholder="0" 
+                      value={newDiscount.value}
+                      onChange={(e) => setNewDiscount({...newDiscount, value: e.target.value})}
+                      className="w-full px-3 py-2 border border-steel-gray/30 rounded-md text-sm"
+                    />
+                  </div>
+                  <div className="w-full md:w-24">
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Type</label>
+                    <select 
+                      value={newDiscount.type}
+                      onChange={(e) => setNewDiscount({...newDiscount, type: e.target.value})}
+                      className="w-full px-3 py-2 border border-steel-gray/30 rounded-md text-sm"
+                    >
+                      <option value="%">% Off</option>
+                      <option value="$">$ Off</option>
+                    </select>
                   </div>
                   <button 
-                    onClick={() => handleDeleteCoupon(coupon.id)}
-                    className="text-gray-300 hover:text-red-500 transition-colors"
+                    type="button" 
+                    onClick={addDiscount}
+                    disabled={!newDiscount.name || !newDiscount.value}
+                    className="w-full md:w-auto btn-primary py-2 px-4 flex items-center justify-center"
                   >
-                    <SafeIcon icon={FiTrash2} />
+                    <SafeIcon icon={FiPlus} className="w-4 h-4" />
                   </button>
                 </div>
-              ))}
-              {coupons.length === 0 && !loadingCoupons && (
-                <p className="text-center text-gray-400 text-sm py-4">No active coupons</p>
-              )}
-            </div>
-          </motion.div>
-        </div>
+              </div>
 
+              <div className="space-y-2">
+                {settings.savedDiscounts && settings.savedDiscounts.map(discount => (
+                  <div key={discount.id} className="flex justify-between items-center bg-white p-3 rounded border border-gray-200">
+                    <div className="flex items-center space-x-3">
+                      <span className="bg-gray-100 p-1.5 rounded text-gray-600">
+                        <SafeIcon icon={discount.type === '%' ? FiPercent : FiDollarSign} className="w-4 h-4" />
+                      </span>
+                      <span className="font-medium text-gray-800">{discount.name}</span>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <span className="font-bold text-damascus-bronze">
+                        {discount.type === '$' ? `$${discount.value}` : `${discount.value}%`} Off
+                      </span>
+                      <button 
+                        type="button" 
+                        onClick={() => removeDiscount(discount.id)}
+                        className="text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <SafeIcon icon={FiTrash2} className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {(!settings.savedDiscounts || settings.savedDiscounts.length === 0) && (
+                  <p className="text-sm text-gray-500 text-center italic py-2">No preset discounts saved.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Integrations */}
+            <div>
+              <div className="flex items-center space-x-2 mb-4 border-b border-steel-gray/20 pb-2">
+                <SafeIcon icon={FiCalendar} className="text-damascus-bronze" />
+                <h2 className="text-xl font-semibold text-carbon-black">Integrations</h2>
+              </div>
+              <div className="bg-whetstone-cream p-4 rounded-lg border border-steel-gray/20 flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-carbon-black">Google Calendar</h3>
+                  <p className="text-sm text-steel-gray">Sync reservations to your calendar automatically.</p>
+                </div>
+                <div className="flex items-center">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      name="googleCalendarConnected" 
+                      checked={settings.googleCalendarConnected} 
+                      onChange={handleChange} 
+                      className="sr-only peer" 
+                    />
+                    <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-damascus-bronze"></div>
+                    <span className="ml-3 text-sm font-medium text-steel-gray">{settings.googleCalendarConnected ? 'Connected' : 'Disconnected'}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Admin Access */}
+            <div>
+              <div className="flex items-center space-x-2 mb-4 border-b border-steel-gray/20 pb-2">
+                <SafeIcon icon={FiUser} className="text-damascus-bronze" />
+                <h2 className="text-xl font-semibold text-carbon-black">Staff Access Credentials</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-steel-gray mb-2">Username</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <SafeIcon icon={FiUser} className="text-steel-gray" />
+                    </div>
+                    <input 
+                      type="text" 
+                      name="adminUsername" 
+                      value={settings.adminUsername} 
+                      onChange={handleChange} 
+                      className="w-full pl-10 pr-4 py-3 border border-steel-gray/30 rounded-lg focus:ring-2 focus:ring-damascus-bronze focus:border-transparent bg-dark-input text-carbon-black" 
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-steel-gray mb-2">Password</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <SafeIcon icon={FiLock} className="text-steel-gray" />
+                    </div>
+                    <input 
+                      type="text" 
+                      name="adminPassword" 
+                      value={settings.adminPassword} 
+                      onChange={handleChange} 
+                      className="w-full pl-10 pr-4 py-3 border border-steel-gray/30 rounded-lg focus:ring-2 focus:ring-damascus-bronze focus:border-transparent bg-dark-input text-carbon-black" 
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <button 
+                type="submit" 
+                className="w-full btn-primary py-3 flex items-center justify-center space-x-2 text-white shadow-md"
+              >
+                {saved ? (
+                  <>
+                    <SafeIcon icon={FiCheck} className="w-5 h-5" />
+                    <span>Settings Saved</span>
+                  </>
+                ) : (
+                  <>
+                    <SafeIcon icon={FiSave} className="w-5 h-5" />
+                    <span>Save Changes</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </motion.div>
       </main>
     </div>
   );
