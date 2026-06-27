@@ -14,9 +14,10 @@ import {
 } from 'date-fns';
 import SafeIcon from '../common/SafeIcon';
 import { generateGoogleCalendarUrl } from '../utils/calendarUtils';
+import { apiUrl, isApiConfigured, getCheckInUrl } from '../utils/api';
 import * as FiIcons from 'react-icons/fi';
 
-const { FiCalendar, FiClock, FiUser, FiCheck, FiArrowLeft, FiSun, FiMoon, FiSunrise } = FiIcons;
+const { FiCalendar, FiClock, FiUser, FiCheck, FiArrowLeft, FiSun, FiMoon, FiSunrise, FiCopy, FiExternalLink } = FiIcons;
 
 const ReservationForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -31,6 +32,7 @@ const ReservationForm = () => {
   });
   const [reservationId, setReservationId] = useState('');
   const [finalReservationData, setFinalReservationData] = useState(null);
+  const [copyStatus, setCopyStatus] = useState('');
 
   const generateReservationId = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -79,7 +81,6 @@ const ReservationForm = () => {
   };
 
   const generateTimeSlots = (selectedDateStr) => {
-    // Convert selected date string to Date object
     let selectedDate;
     if (selectedDateStr) {
       selectedDate = parseISO(selectedDateStr);
@@ -88,7 +89,6 @@ const ReservationForm = () => {
     }
     
     const isTodaySelected = isToday(selectedDate);
-    const now = new Date();
     
     const dayParts = [
       {
@@ -122,7 +122,6 @@ const ReservationForm = () => {
           const time = new Date(selectedDate);
           time.setHours(hour, minute, 0, 0);
           
-          // Skip past time slots if today is selected
           if (isTodaySelected && isPast(time)) {
             continue;
           }
@@ -176,28 +175,31 @@ const ReservationForm = () => {
       selectedDate: formData.selectedDate,
       pickupDate: format(pickupDate, 'EEEE, MMMM do'),
       status: 'booked',
+      checkInUrl: getCheckInUrl(id),
       createdAt: new Date().toISOString()
     };
     
     setFinalReservationData(reservation);
     
     try {
-      const response = await fetch('http://localhost:3001/api/reservations/book', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          customer: {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone
+      if (isApiConfigured()) {
+        const response = await fetch(apiUrl('/api/reservations/book'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
           },
-          reservation
-        })
-      });
-      
-      if (!response.ok) throw new Error('Failed to create reservation');
+          body: JSON.stringify({
+            customer: {
+              name: formData.name,
+              email: formData.email,
+              phone: formData.phone
+            },
+            reservation
+          })
+        });
+        
+        if (!response.ok) throw new Error('Failed to create reservation');
+      }
       
       localStorage.setItem(`reservation_${id}`, JSON.stringify(reservation));
       setCurrentStep(4);
@@ -215,6 +217,19 @@ const ReservationForm = () => {
     });
   };
 
+  const copyCheckInLink = async () => {
+    if (!reservationId) return;
+
+    try {
+      await navigator.clipboard.writeText(getCheckInUrl(reservationId));
+      setCopyStatus('Copied!');
+      setTimeout(() => setCopyStatus(''), 2000);
+    } catch (error) {
+      setCopyStatus('Copy failed');
+      setTimeout(() => setCopyStatus(''), 2000);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       day: '',
@@ -227,16 +242,15 @@ const ReservationForm = () => {
     });
     setCurrentStep(1);
     setReservationId('');
+    setCopyStatus('');
   };
 
-  // Determine which time slots to show based on selected date
   const timeSlotsByPart = formData.selectedDate 
     ? generateTimeSlots(formData.selectedDate) 
     : [];
 
   return (
     <div className="max-w-3xl mx-auto min-h-[60vh] flex flex-col justify-center">
-      {/* Progress Indicator */}
       {currentStep < 4 && (
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center space-x-4">
@@ -271,7 +285,6 @@ const ReservationForm = () => {
       )}
 
       <AnimatePresence mode="wait">
-        {/* Step 1: Select Day */}
         {currentStep === 1 && (
           <motion.div
             key="step1"
@@ -283,7 +296,7 @@ const ReservationForm = () => {
             <div className="text-center mb-8">
               <SafeIcon icon={FiCalendar} className="w-16 h-16 text-damascus-bronze mx-auto mb-4" />
               <h2 className="font-serif font-bold text-3xl text-whetstone-cream mb-2">
-                Make Reservations
+                Make Reservation
               </h2>
               <p className="text-gray-300">Select a day for your drop-off</p>
             </div>
@@ -338,7 +351,6 @@ const ReservationForm = () => {
                 ))}
               </div>
 
-              {/* Date Picker for "This Week" */}
               {formData.day === 'thisweek' && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
@@ -365,7 +377,6 @@ const ReservationForm = () => {
           </motion.div>
         )}
 
-        {/* Step 2: Choose Time Slot */}
         {currentStep === 2 && (
           <motion.div
             key="step2"
@@ -451,7 +462,6 @@ const ReservationForm = () => {
           </motion.div>
         )}
 
-        {/* Step 3: Customer Details */}
         {currentStep === 3 && (
           <motion.div
             key="step3"
@@ -557,7 +567,6 @@ const ReservationForm = () => {
           </motion.div>
         )}
 
-        {/* Step 4: Confirmation */}
         {currentStep === 4 && (
           <motion.div
             key="step4"
@@ -575,7 +584,7 @@ const ReservationForm = () => {
               <p className="text-sm mb-2">Your Reservation ID:</p>
               <p className="font-bold text-2xl tracking-wider">{reservationId}</p>
               {finalReservationData && (
-                <div className="mt-4 pt-4 border-t border-white/20">
+                <div className="mt-4 pt-4 border-t border-white/20 space-y-3">
                   <a
                     href={generateGoogleCalendarUrl(finalReservationData)}
                     target="_blank"
@@ -588,9 +597,31 @@ const ReservationForm = () => {
                 </div>
               )}
             </div>
+
+            {reservationId && (
+              <div className="bg-carbon-black/60 border border-white/10 rounded-xl p-5 mb-6 text-left">
+                <p className="text-xs uppercase tracking-widest text-gray-400 font-bold mb-2">Drop Box Check-In Link</p>
+                <p className="text-sm text-gray-300 mb-4">
+                  When you arrive, open this link to confirm your item count and upload a bundle photo.
+                </p>
+                <div className="break-all bg-black/30 rounded-lg p-3 text-sm text-honed-sage mb-4 border border-white/10">
+                  {getCheckInUrl(reservationId)}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button onClick={copyCheckInLink} className="btn-secondary py-3 flex items-center justify-center space-x-2">
+                    <SafeIcon icon={FiCopy} className="w-4 h-4" />
+                    <span>{copyStatus || 'Copy Link'}</span>
+                  </button>
+                  <a href={getCheckInUrl(reservationId)} className="btn-primary py-3 flex items-center justify-center space-x-2">
+                    <SafeIcon icon={FiExternalLink} className="w-4 h-4" />
+                    <span>Open Check-In</span>
+                  </a>
+                </div>
+              </div>
+            )}
+
             <p className="text-gray-300 mb-8 leading-relaxed">
-              We've sent a confirmation email with your reservation details. Please
-              remember to check in using the Drop-Off Lookup page when you arrive.
+              Please arrive during your selected window. At the Drop Box, use your check-in link or the QR code on the box. No payment is due now; final pricing is set after inspection.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button
@@ -600,7 +631,7 @@ const ReservationForm = () => {
                 Make Another Reservation
               </button>
               <button
-                onClick={() => (window.location.href = '#/dropbox')}
+                onClick={() => (window.location.href = '/dropbox')}
                 className="btn-primary py-3 px-6"
               >
                 Drop-Off Lookup
