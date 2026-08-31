@@ -1,8 +1,11 @@
-# CRM Login Credentials
+# Chef KnifeWorks Suite
 
-**Username:** `admin`
-**Password:** `SharpKnives2024!`
+Chef KnifeWorks public website and internal workflow application.
 
-These are the default credentials used for accessing the Chef KnifeWorks CRM system. This information is also embedded in the server-side authentication code (`server/index.js`) and the login page fallback mechanism.
+## Security
 
-For security purposes, these should be changed in a production environment.
+Production credentials must never be stored in source code or repository documentation. Staff authentication must use environment-backed credentials or a dedicated authentication provider before the CRM is exposed in production.
+
+## Public booking
+
+The canonical customer booking route is `/appointments`. Legacy `/book` and `/appointment` links redirect there so existing links continue to work.
