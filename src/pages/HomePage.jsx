@@ -6,8 +6,8 @@ const PHONE = 'tel:+16125674640';
 
 const SectionTitle = ({ eyebrow, title, copy }) => (
   <div className="max-w-3xl">
-    <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#c7a36a] mb-4">{eyebrow}</p>
-    <h2 className="font-serif text-4xl md:text-6xl leading-[1.02] text-[#f5f0e6] mb-5">{title}</h2>
+    <p className="text-xs font-bold uppercase tracking-[0.24em] text-honed-sage mb-4">{eyebrow}</p>
+    <h2 className="font-serif text-4xl md:text-6xl leading-[1.02] text-whetstone-cream mb-5">{title}</h2>
     {copy && <p className="text-lg leading-8 text-white/65">{copy}</p>}
   </div>
 );
@@ -35,23 +35,23 @@ const HomePage = () => {
   ];
 
   return (
-    <div className="bg-[#11100f] text-[#f5f0e6] overflow-hidden">
+    <div className="bg-carbon-black text-whetstone-cream overflow-hidden">
       <section id="hero" className="relative min-h-[84vh] flex items-center border-b border-white/10">
-        <div className="absolute inset-0 opacity-30" style={{backgroundImage:'radial-gradient(circle at 75% 25%, rgba(199,163,106,.28), transparent 28%), radial-gradient(circle at 15% 70%, rgba(255,255,255,.08), transparent 24%)'}} />
+        <div className="absolute inset-0 opacity-40" style={{backgroundImage:'radial-gradient(circle at 75% 25%, rgba(139,154,136,.28), transparent 30%), radial-gradient(circle at 15% 70%, rgba(200,117,78,.12), transparent 24%)'}} />
         <div className="relative max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-24 md:py-32 w-full">
           <div className="max-w-5xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/70 mb-8">
-              <FiMapPin className="text-[#c7a36a]" /> Maple Grove, Minnesota
+              <FiMapPin className="text-honed-sage" /> Maple Grove, Minnesota
             </div>
             <h1 className="font-serif text-5xl sm:text-7xl lg:text-[96px] leading-[0.94] tracking-[-0.035em] mb-8">
               Your knives aren’t<br className="hidden sm:block" /> going shopping.
-              <span className="block text-[#c7a36a]">They’re coming in for service.</span>
+              <span className="block text-honed-sage">They’re coming in for service.</span>
             </h1>
             <p className="max-w-2xl text-lg md:text-xl leading-8 text-white/70 mb-10">
               Professional knife sharpening by a longtime chef and dedicated sharpener. Reserve your arrival, leave your knives in capable hands, and return when they’re ready for departure.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-              <a href={BOOK_URL} className="inline-flex items-center justify-center gap-3 rounded-full bg-[#f5f0e6] px-7 py-4 font-bold text-[#11100f] hover:bg-white transition-colors">
+              <a href={BOOK_URL} className="inline-flex items-center justify-center gap-3 rounded-full bg-honed-sage px-7 py-4 font-bold text-white hover:bg-damascus-bronze transition-colors">
                 Book Your Arrival <FiArrowRight />
               </a>
               <a href="#how-it-works" className="inline-flex items-center justify-center rounded-full border border-white/20 px-7 py-4 font-semibold text-white/85 hover:bg-white/5 transition-colors">
@@ -62,7 +62,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="bg-[#f5f0e6] text-[#181613]">
+      <section className="bg-whetstone-cream text-carbon-black">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-8 grid sm:grid-cols-3 gap-5">
           {[
             [FiClock, '36–48 hour', 'typical turnaround'],
@@ -70,8 +70,8 @@ const HomePage = () => {
             [FiShield, 'Professional care', 'from intake to final edge'],
           ].map(([Icon, big, small]) => (
             <div key={big} className="flex items-center gap-4 py-3">
-              <div className="w-11 h-11 rounded-full border border-black/10 flex items-center justify-center"><Icon /></div>
-              <div><div className="font-bold">{big}</div><div className="text-sm text-black/55">{small}</div></div>
+              <div className="w-11 h-11 rounded-full border border-carbon-black/10 text-steel-gray flex items-center justify-center"><Icon /></div>
+              <div><div className="font-bold">{big}</div><div className="text-sm text-carbon-black/60">{small}</div></div>
             </div>
           ))}
         </div>
@@ -81,8 +81,8 @@ const HomePage = () => {
         <SectionTitle eyebrow="Arrival → Departure" title="Knife sharpening should feel simple." copy="No mystery, no wandering through a complicated booking maze. Four clear steps from dull to done." />
         <div className="grid md:grid-cols-4 gap-px bg-white/10 border border-white/10 mt-14">
           {steps.map(([num,title,copy]) => (
-            <div key={num} className="bg-[#11100f] p-7 md:p-8 min-h-[240px] flex flex-col">
-              <span className="font-serif text-5xl text-[#c7a36a] mb-auto">{num}</span>
+            <div key={num} className="bg-carbon-black p-7 md:p-8 min-h-[240px] flex flex-col">
+              <span className="font-serif text-5xl text-honed-sage mb-auto">{num}</span>
               <h3 className="text-xl font-bold mb-3">{title}</h3>
               <p className="text-white/55 leading-6">{copy}</p>
             </div>
@@ -90,12 +90,12 @@ const HomePage = () => {
         </div>
       </section>
 
-      <section className="border-y border-white/10 bg-[#181613]">
+      <section className="border-y border-white/10 bg-steel-gray/25">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-24 md:py-32 grid lg:grid-cols-[0.9fr_1.1fr] gap-14 items-start">
           <div>
             <SectionTitle eyebrow="The Studio" title="Yes, you’re in the right place." copy="Chef KnifeWorks is intentionally operated from a dedicated home sharpening studio in Maple Grove — not a retail storefront. That keeps the focus where it belongs: careful craft, efficient service and your knives." />
-            <div className="mt-8 rounded-2xl border border-[#c7a36a]/30 bg-[#c7a36a]/10 p-6">
-              <div className="flex gap-4"><FiMapPin className="mt-1 text-[#c7a36a] shrink-0" /><p className="text-white/75 leading-7"><strong className="text-white">Before you arrive:</strong> reserve your drop-off. Your confirmation and arrival instructions will guide you through the simple handoff.</p></div>
+            <div className="mt-8 rounded-2xl border border-honed-sage/30 bg-honed-sage/10 p-6">
+              <div className="flex gap-4"><FiMapPin className="mt-1 text-honed-sage shrink-0" /><p className="text-white/75 leading-7"><strong className="text-white">Before you arrive:</strong> reserve your drop-off. Your confirmation and arrival instructions will guide you through the simple handoff.</p></div>
             </div>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
@@ -106,7 +106,7 @@ const HomePage = () => {
               [FiStar,'Local service','Personal sharpening service for home cooks, culinary professionals and serious knife owners.'],
             ].map(([Icon,title,copy]) => (
               <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.025] p-7">
-                <Icon className="text-[#c7a36a] text-2xl mb-6" />
+                <Icon className="text-honed-sage text-2xl mb-6" />
                 <h3 className="font-bold text-lg mb-3">{title}</h3>
                 <p className="text-white/55 leading-6">{copy}</p>
               </div>
@@ -119,10 +119,10 @@ const HomePage = () => {
         <SectionTitle eyebrow="Sharpening Services" title="Bring the knives you actually use." copy="From the everyday chef knife to the blade you save for serious prep, the service is matched to the tool in front of us." />
         <div className="mt-14 grid md:grid-cols-2 gap-4">
           {services.map(([title,copy]) => (
-            <div key={title} className="group rounded-2xl border border-white/10 p-7 md:p-9 hover:border-[#c7a36a]/50 transition-colors">
+            <div key={title} className="group rounded-2xl border border-white/10 p-7 md:p-9 hover:border-honed-sage/60 transition-colors">
               <div className="flex items-start justify-between gap-5">
                 <div><h3 className="font-serif text-3xl mb-3">{title}</h3><p className="text-white/55 leading-7">{copy}</p></div>
-                <FiArrowRight className="mt-2 text-[#c7a36a] group-hover:translate-x-1 transition-transform" />
+                <FiArrowRight className="mt-2 text-honed-sage group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           ))}
@@ -130,10 +130,10 @@ const HomePage = () => {
         <p className="mt-7 text-sm text-white/45">Final pricing depends on blade type, condition and service required. You’ll pay after service.</p>
       </section>
 
-      <section className="bg-[#c7a36a] text-[#17130e]">
+      <section className="bg-honed-sage text-carbon-black">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-20 md:py-24 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
           <div><p className="text-xs font-bold uppercase tracking-[0.24em] mb-4">Ready when you are</p><h2 className="font-serif text-4xl md:text-6xl leading-tight">Give your knives a proper service call.</h2></div>
-          <a href={BOOK_URL} className="inline-flex items-center justify-center gap-3 rounded-full bg-[#11100f] text-white px-8 py-4 font-bold hover:scale-[1.02] transition-transform">Book Your Arrival <FiArrowRight /></a>
+          <a href={BOOK_URL} className="inline-flex items-center justify-center gap-3 rounded-full bg-carbon-black text-white px-8 py-4 font-bold hover:bg-steel-gray transition-colors">Book Your Arrival <FiArrowRight /></a>
         </div>
       </section>
 
@@ -142,7 +142,7 @@ const HomePage = () => {
         <div className="mt-12 divide-y divide-white/10 border-y border-white/10">
           {faqs.map(([q,a]) => (
             <details key={q} className="group py-6">
-              <summary className="cursor-pointer list-none flex items-center justify-between gap-5 font-bold text-lg"><span>{q}</span><span className="text-[#c7a36a] text-2xl group-open:rotate-45 transition-transform">+</span></summary>
+              <summary className="cursor-pointer list-none flex items-center justify-between gap-5 font-bold text-lg"><span>{q}</span><span className="text-honed-sage text-2xl group-open:rotate-45 transition-transform">+</span></summary>
               <p className="pt-4 max-w-3xl text-white/60 leading-7">{a}</p>
             </details>
           ))}
@@ -152,7 +152,7 @@ const HomePage = () => {
       <section className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-16 flex flex-col md:flex-row gap-8 md:items-end md:justify-between">
           <div><div className="font-serif text-3xl mb-2">Chef KnifeWorks</div><div className="text-white/45">Professional knife sharpening · Maple Grove, Minnesota</div></div>
-          <div className="flex flex-wrap gap-5 text-sm"><a href={BOOK_URL} className="hover:text-[#c7a36a]">Book Your Arrival</a><a href={PHONE} className="hover:text-[#c7a36a]">Call (612) 567-4640</a><a href="mailto:sales@chefknifeworks.com" className="hover:text-[#c7a36a]">Email</a></div>
+          <div className="flex flex-wrap gap-5 text-sm"><a href={BOOK_URL} className="hover:text-honed-sage">Book Your Arrival</a><a href={PHONE} className="hover:text-honed-sage">Call (612) 567-4640</a><a href="mailto:info@chefknifeworks.com" className="hover:text-honed-sage">Email</a></div>
         </div>
       </section>
     </div>
