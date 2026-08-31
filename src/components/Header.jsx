@@ -33,7 +33,7 @@ const Header = () => {
 
         <div className="hidden md:flex ml-auto items-center gap-3 shrink-0">
           <a href="tel:+16125674640" className="hidden lg:block px-3 py-3 text-sm text-white/70 hover:text-honed-sage">Call</a>
-          <Link to="/book" className="inline-flex items-center gap-2 rounded-xl bg-honed-sage text-white px-5 py-3 text-sm font-bold hover:bg-damascus-bronze transition-colors">Book Your Arrival <FiArrowRight /></Link>
+          <Link to="/appointments" className="inline-flex items-center gap-2 rounded-xl bg-honed-sage text-white px-5 py-3 text-sm font-bold hover:bg-damascus-bronze transition-colors">Book Your Arrival <FiArrowRight /></Link>
         </div>
 
         <button className="md:hidden shrink-0 ml-auto w-12 h-12 rounded-full border border-white/20 bg-white/10 flex items-center justify-center text-white" aria-label="Toggle navigation" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? <FiX size={25}/> : <FiMenu size={25}/>}</button>
@@ -49,7 +49,7 @@ const Header = () => {
           </nav>
           <div className="border-t border-white/10 mt-3 pt-4">
             <a href="tel:+16125674640" className="block py-3 text-white/70">Call (612) 567-4640</a>
-            <Link to="/book" onClick={() => setOpen(false)} className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-honed-sage text-white px-5 py-4 font-bold">Book Your Arrival <FiArrowRight /></Link>
+            <Link to="/appointments" onClick={() => setOpen(false)} className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-honed-sage text-white px-5 py-4 font-bold">Book Your Arrival <FiArrowRight /></Link>
           </div>
         </div>
       )}
