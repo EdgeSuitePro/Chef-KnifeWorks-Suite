@@ -1,8 +1,8 @@
 import React from 'react';
-import { FiArrowRight, FiCheck, FiClock, FiHome, FiMapPin, FiShield, FiStar, FiTool, FiUser, FiBell } from 'react-icons/fi';
+import { FiArrowRight, FiCheck, FiClock, FiMapPin, FiShield, FiStar, FiTool, FiUser, FiBell } from 'react-icons/fi';
 import ckwLogo from '../assets/ckw-logo.svg';
 
-const BOOK_URL = 'https://chefknifeworks.setmore.com/';
+const BOOK_URL = '/book';
 const PHONE = 'tel:+16125674640';
 
 const SectionTitle = ({ eyebrow, title, copy }) => (
