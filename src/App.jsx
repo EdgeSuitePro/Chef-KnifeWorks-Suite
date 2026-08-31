@@ -1,12 +1,11 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Outlet, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet, useLocation, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import BookingPage from './pages/BookingPage';
 import PricingPage from './pages/PricingPage';
-import AppointmentPage from './pages/AppointmentPage';
 import DropBoxPage from './pages/DropBoxPage';
 import ContactPage from './pages/ContactPage';
 import CRMPage from './pages/CRMPage';
@@ -41,7 +40,7 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/book" element={<BookingPage />} />
             <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/appointment" element={<AppointmentPage />} />
+            <Route path="/appointment" element={<Navigate to="/book" replace />} />
             <Route path="/dropbox" element={<DropBoxPage />} />
             <Route path="/lookup" element={<LookupPage />} />
             <Route path="/contact" element={<ContactPage />} />
