@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { FiMenu, FiX, FiArrowRight } from 'react-icons/fi';
 import ckwLogo from '../assets/ckw-logo.svg';
 
-const BOOK_URL = 'https://chefknifeworks.setmore.com/';
+const BOOK_URL = '/book';
 
 const Header = () => {
   const [open, setOpen] = useState(false);
@@ -29,7 +29,7 @@ const Header = () => {
 
         <div className="hidden md:flex items-center gap-3">
           <a href="tel:+16125674640" className="px-4 py-3 text-sm text-white/70 hover:text-honed-sage">Call</a>
-          <a href={BOOK_URL} className="inline-flex items-center gap-2 rounded-full bg-honed-sage text-white px-5 py-3 text-sm font-bold hover:bg-damascus-bronze transition-colors">Book Your Arrival <FiArrowRight /></a>
+          <Link to={BOOK_URL} className="inline-flex items-center gap-2 rounded-full bg-honed-sage text-white px-5 py-3 text-sm font-bold hover:bg-damascus-bronze transition-colors">Book Your Arrival <FiArrowRight /></Link>
         </div>
 
         <button className="md:hidden p-2" aria-label="Toggle navigation" onClick={() => setOpen(!open)}>{open ? <FiX size={22}/> : <FiMenu size={22}/>}</button>
@@ -39,7 +39,7 @@ const Header = () => {
         <div className="md:hidden border-t border-white/10 bg-[#0b0b0b] px-5 py-5 space-y-2">
           {links.map(([label, href]) => <a key={label} href={href} onClick={() => setOpen(false)} className="block py-3 text-white/75">{label}</a>)}
           <a href="tel:+16125674640" className="block py-3 text-white/75">Call (612) 567-4640</a>
-          <a href={BOOK_URL} className="mt-3 flex items-center justify-center gap-2 rounded-full bg-honed-sage text-white px-5 py-4 font-bold">Book Your Arrival <FiArrowRight /></a>
+          <Link to={BOOK_URL} onClick={() => setOpen(false)} className="mt-3 flex items-center justify-center gap-2 rounded-full bg-honed-sage text-white px-5 py-4 font-bold">Book Your Arrival <FiArrowRight /></Link>
         </div>
       )}
     </header>
