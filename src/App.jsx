@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
+import BookingPage from './pages/BookingPage';
 import PricingPage from './pages/PricingPage';
 import AppointmentPage from './pages/AppointmentPage';
 import DropBoxPage from './pages/DropBoxPage';
@@ -18,20 +19,14 @@ import './App.css';
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return null;
 };
 
 const PublicLayout = () => (
   <div className="min-h-screen bg-carbon-black flex flex-col">
     <Header />
-    <main className="flex-1 flex flex-col">
-      <Outlet />
-    </main>
+    <main className="flex-1 flex flex-col"><Outlet /></main>
     <Footer />
   </div>
 );
@@ -44,32 +39,17 @@ function App() {
         <Routes>
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />
+            <Route path="/book" element={<BookingPage />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/appointment" element={<AppointmentPage />} />
             <Route path="/dropbox" element={<DropBoxPage />} />
             <Route path="/lookup" element={<LookupPage />} />
             <Route path="/contact" element={<ContactPage />} />
           </Route>
-
           <Route path="/login" element={<LoginPage />} />
           <Route path="/pickup" element={<PickupPage />} />
-
-          <Route
-            path="/crm"
-            element={
-              <ProtectedRoute>
-                <CRMPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <SettingsPage />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/crm" element={<ProtectedRoute><CRMPage /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         </Routes>
       </AnimatePresence>
     </Router>
