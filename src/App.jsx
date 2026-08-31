@@ -38,9 +38,10 @@ function App() {
         <Routes>
           <Route element={<PublicLayout />}>
             <Route path="/" element={<HomePage />} />
-            <Route path="/book" element={<BookingPage />} />
+            <Route path="/appointments" element={<BookingPage />} />
+            <Route path="/book" element={<Navigate to="/appointments" replace />} />
+            <Route path="/appointment" element={<Navigate to="/appointments" replace />} />
             <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/appointment" element={<Navigate to="/book" replace />} />
             <Route path="/dropbox" element={<DropBoxPage />} />
             <Route path="/lookup" element={<LookupPage />} />
             <Route path="/contact" element={<ContactPage />} />
