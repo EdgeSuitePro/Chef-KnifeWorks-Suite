@@ -7,7 +7,7 @@ const PHONE = 'tel:+16125674640';
 const SectionTitle = ({ eyebrow, title, copy }) => (
   <div className="max-w-3xl">
     <p className="text-xs font-bold uppercase tracking-[0.24em] text-honed-sage mb-4">{eyebrow}</p>
-    <h2 className="font-serif text-4xl md:text-6xl leading-[1.02] text-whetstone-cream mb-5">{title}</h2>
+    <h2 className="font-serif text-4xl md:text-6xl leading-[1.08] text-whetstone-cream mb-5">{title}</h2>
     {copy && <p className="text-lg leading-8 text-white/65">{copy}</p>}
   </div>
 );
@@ -43,12 +43,12 @@ const HomePage = () => {
             <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/70 mb-8">
               <FiMapPin className="text-honed-sage" /> Maple Grove, Minnesota
             </div>
-            <h1 className="font-serif text-5xl sm:text-7xl lg:text-[96px] leading-[0.94] tracking-[-0.035em] mb-8">
-              Your knives aren’t<br className="hidden sm:block" /> going shopping.
-              <span className="block text-honed-sage">They’re coming in for service.</span>
+            <h1 className="font-serif text-5xl sm:text-7xl lg:text-[92px] leading-[1.08] tracking-[-0.03em] mb-8 max-w-5xl">
+              Professional knife sharpening.
+              <span className="block text-honed-sage mt-2">Done with a chef’s eye for detail.</span>
             </h1>
-            <p className="max-w-2xl text-lg md:text-xl leading-8 text-white/70 mb-10">
-              Professional knife sharpening by a longtime chef and dedicated sharpener. Reserve your arrival, leave your knives in capable hands, and return when they’re ready for departure.
+            <p className="max-w-2xl text-lg md:text-xl leading-9 text-white/70 mb-10">
+              Reserve a convenient drop-off in Maple Grove. I’ll inspect, sharpen, repair and finish your knives, then let you know when they’re ready to pick up.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
               <a href={BOOK_URL} className="inline-flex items-center justify-center gap-3 rounded-full bg-honed-sage px-7 py-4 font-bold text-white hover:bg-damascus-bronze transition-colors">
@@ -132,7 +132,7 @@ const HomePage = () => {
 
       <section className="bg-honed-sage text-carbon-black">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-20 md:py-24 grid lg:grid-cols-[1fr_auto] gap-10 items-center">
-          <div><p className="text-xs font-bold uppercase tracking-[0.24em] mb-4">Ready when you are</p><h2 className="font-serif text-4xl md:text-6xl leading-tight">Give your knives a proper service call.</h2></div>
+          <div><p className="text-xs font-bold uppercase tracking-[0.24em] mb-4">Ready when you are</p><h2 className="font-serif text-4xl md:text-6xl leading-[1.08]">Give your knives a proper service call.</h2></div>
           <a href={BOOK_URL} className="inline-flex items-center justify-center gap-3 rounded-full bg-carbon-black text-white px-8 py-4 font-bold hover:bg-steel-gray transition-colors">Book Your Arrival <FiArrowRight /></a>
         </div>
       </section>
