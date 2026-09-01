@@ -1,108 +1,64 @@
 import React, { useMemo, useState } from 'react';
 import { addDays, format, isSameDay } from 'date-fns';
-import { FiArrowLeft, FiArrowRight, FiCalendar, FiCheck, FiClock, FiShield } from 'react-icons/fi';
+import { FiArrowLeft, FiArrowRight, FiCheck, FiMinus, FiPlus, FiShield } from 'react-icons/fi';
 
 const SETMORE_FALLBACK = 'https://chefknifeworks.setmore.com/';
-
-const windows = [
-  { id: 'morning', label: 'Morning', time: '8:00 AM – 12:00 PM', endHour: 12 },
-  { id: 'midday', label: 'Mid-Day', time: '12:00 PM – 4:00 PM', endHour: 16 },
-  { id: 'evening', label: 'Evening', time: '4:00 PM – 7:00 PM', endHour: 19 },
+const dayparts = [
+  { id: 'morning', label: 'Morning', time: '8 AM – 12 PM', slots: ['8–9 AM', '9–10 AM', '10–11 AM', '11 AM–12 PM'] },
+  { id: 'midday', label: 'Mid-Day', time: '12 PM – 4 PM', slots: ['12–1 PM', '1–2 PM', '2–3 PM', '3–4 PM'] },
+  { id: 'evening', label: 'Evening', time: '4 PM – 8 PM', slots: ['4–5 PM', '5–6 PM', '6–7 PM', '7–8 PM'] },
 ];
-
-const makeId = () => {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-};
-
-const dateFromValue = (value) => new Date(`${value}T12:00:00`);
+const slotEndHour = { '8–9 AM': 9, '9–10 AM': 10, '10–11 AM': 11, '11 AM–12 PM': 12, '12–1 PM': 13, '1–2 PM': 14, '2–3 PM': 15, '3–4 PM': 16, '4–5 PM': 17, '5–6 PM': 18, '6–7 PM': 19, '7–8 PM': 20 };
+const makeId = () => { const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join(''); };
+const dateFromValue = value => new Date(`${value}T12:00:00`);
 
 export default function BookingPage() {
   const [step, setStep] = useState(1);
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
   const [confirmation, setConfirmation] = useState(null);
-  const [form, setForm] = useState({ date: '', window: '', name: '', phone: '', email: '', quantity: '', notes: '' });
-
+  const [form, setForm] = useState({ date: '', window: '', slot: '', quantity: 6, hasNote: false, notes: '', name: '', phone: '', email: '' });
   const now = new Date();
-  const dates = useMemo(() => Array.from({ length: 14 }, (_, i) => {
-    const date = addDays(new Date(), i);
-    const todayHasTimeLeft = i !== 0 || new Date().getHours() < 19;
-    return {
-      value: format(date, 'yyyy-MM-dd'),
-      label: format(date, i === 0 ? "'Today,' EEEE MMM d" : i === 1 ? "'Tomorrow,' EEEE MMM d" : 'EEEE, MMM d'),
-      available: todayHasTimeLeft,
-    };
-  }), []);
-
-  const selectedWindow = windows.find(w => w.id === form.window);
+  const dates = useMemo(() => Array.from({ length: 14 }, (_, i) => { const date = addDays(new Date(), i); return { value: format(date, 'yyyy-MM-dd'), label: format(date, i === 0 ? "'Today,' EEEE MMM d" : i === 1 ? "'Tomorrow,' EEEE MMM d" : 'EEEE, MMM d'), available: i !== 0 || new Date().getHours() < 20 }; }), []);
+  const selectedDaypart = dayparts.find(d => d.id === form.window);
   const selectedDateLabel = dates.find(d => d.value === form.date)?.label;
   const selectedDate = form.date ? dateFromValue(form.date) : null;
   const update = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
+  const slotAvailable = slot => !selectedDate || !isSameDay(selectedDate, now) || now.getHours() < slotEndHour[slot];
+  const choose = (key, value, next) => { update(key, value); setTimeout(() => setStep(next), 120); };
+  const back = target => { setError(''); setStep(target); };
 
-  const isWindowAvailable = (window) => {
-    if (!selectedDate || !isSameDay(selectedDate, now)) return true;
-    return now.getHours() < window.endHour;
-  };
-
-  const availableWindows = windows.filter(isWindowAvailable);
-
-  const submit = async (e) => {
-    e.preventDefault();
-    setStatus('saving');
-    setError('');
+  const submit = async e => {
+    e.preventDefault(); setStatus('saving'); setError('');
     const id = makeId();
-    const reservation = {
-      id,
-      selectedDate: form.date,
-      dropOffDate: format(dateFromValue(form.date), 'EEEE, MMMM d'),
-      selectedSlot: `${selectedWindow.label} · ${selectedWindow.time}`,
-      arrivalWindow: form.window,
-      estimatedItemCount: Number(form.quantity),
-      notes: form.notes,
-      status: 'booked',
-      createdAt: new Date().toISOString(),
-      source: 'ckw-website'
-    };
-
+    const reservation = { id, selectedDate: form.date, dropOffDate: format(dateFromValue(form.date), 'EEEE, MMMM d'), selectedSlot: form.slot, arrivalWindow: form.window, estimatedItemCount: Number(form.quantity), notes: form.hasNote ? form.notes : '', status: 'booked', createdAt: new Date().toISOString(), source: 'ckw-website' };
     try {
-      const response = await fetch('/api/reservations/book', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ customer: { name: form.name, phone: form.phone, email: form.email }, reservation })
-      });
+      const response = await fetch('/api/reservations/book', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ customer: { name: form.name, phone: form.phone, email: form.email }, reservation }) });
       const contentType = response.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) throw new Error('Booking API did not return JSON.');
       const data = await response.json();
       if (!response.ok || !data?.success) throw new Error(data?.error || `Booking request failed (${response.status}).`);
-      setConfirmation({ id: data.reservationId || id, date: selectedDateLabel, window: selectedWindow.label });
-      setStatus('saved');
-      setStep(4);
-    } catch (err) {
-      setStatus('error');
-      setError(err.message || 'We could not save your reservation.');
-    }
+      setConfirmation({ id: data.reservationId || id, date: selectedDateLabel, daypart: selectedDaypart?.label, slot: form.slot, quantity: form.quantity }); setStatus('saved'); setStep(8);
+    } catch (err) { setStatus('error'); setError(err.message || 'We could not save your reservation.'); }
   };
 
-  return (
-    <div className="bg-carbon-black text-whetstone-cream min-h-[78vh]">
-      <div className="max-w-4xl mx-auto px-5 sm:px-8 py-12 md:py-20">
-        <div className="mb-10">
-          <p className="text-xs font-bold uppercase tracking-[0.24em] text-honed-sage mb-3">Book Your Arrival</p>
-          <h1 className="font-serif text-4xl md:text-6xl leading-[1.1] mb-4">Reserve your sharpening drop-off.</h1>
-          <p className="text-white/65 text-lg leading-8 max-w-2xl">You are reserving an arrival window, not waiting around for an appointment. Drop off the items you need sharpened, and we’ll take it from there.</p>
-        </div>
+  const card = children => <section className="w-full max-w-xl rounded-3xl border border-white/10 bg-white/[0.035] p-5 sm:p-8 shadow-2xl">{children}</section>;
+  const title = (eyebrow, heading, copy) => <div className="text-center mb-6"><p className="text-[11px] font-bold uppercase tracking-[0.24em] text-honed-sage mb-2">{eyebrow}</p><h2 className="font-serif text-3xl sm:text-4xl leading-tight mb-2">{heading}</h2>{copy && <p className="text-white/55 text-sm sm:text-base leading-6">{copy}</p>}</div>;
+  const option = (label, sub, onClick, disabled = false) => <button disabled={disabled} onClick={onClick} className="w-full rounded-2xl border border-white/10 bg-carbon-black px-5 py-4 text-left hover:border-honed-sage hover:bg-honed-sage/5 active:scale-[.99] transition disabled:opacity-30 disabled:cursor-not-allowed"><span className="font-semibold text-base">{label}</span>{sub && <span className="block text-xs text-white/45 mt-1">{sub}</span>}</button>;
 
-        {step < 4 && <div className="grid grid-cols-3 gap-3 mb-8 text-xs uppercase tracking-wider">{['Day', 'Arrival', 'Details'].map((label, i) => <div key={label} className={`rounded-full px-4 py-2 text-center border ${step === i + 1 ? 'border-honed-sage bg-honed-sage/15 text-whetstone-cream' : step > i + 1 ? 'border-honed-sage/40 text-honed-sage' : 'border-white/10 text-white/35'}`}>{label}</div>)}</div>}
-
-        {step === 1 && <section className="rounded-3xl border border-white/10 bg-white/[0.025] p-6 md:p-9"><div className="flex items-center gap-3 mb-7"><FiCalendar className="text-honed-sage"/><h2 className="font-serif text-2xl">Choose a drop-off day</h2></div><div className="grid sm:grid-cols-2 gap-3">{dates.map(d => <button key={d.value} disabled={!d.available} onClick={() => { update('date', d.value); update('window', ''); setStep(2); }} className="text-left rounded-2xl border border-white/10 bg-carbon-black px-5 py-4 hover:border-honed-sage hover:bg-honed-sage/5 transition-colors disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:border-white/10 disabled:hover:bg-carbon-black"><span className="font-semibold">{d.label}</span>{!d.available && <span className="block text-xs text-white/45 mt-1">Today’s arrival windows have ended</span>}</button>)}</div></section>}
-
-        {step === 2 && <section className="rounded-3xl border border-white/10 bg-white/[0.025] p-6 md:p-9"><button onClick={() => setStep(1)} className="flex items-center gap-2 text-sm text-white/55 hover:text-white mb-6"><FiArrowLeft/> Change day</button><div className="flex items-center gap-3 mb-2"><FiClock className="text-honed-sage"/><h2 className="font-serif text-2xl">Choose your arrival window</h2></div><p className="text-white/50 mb-7">{selectedDateLabel}</p>{availableWindows.length > 0 ? <div className="grid md:grid-cols-3 gap-4">{windows.map(w => { const available = isWindowAvailable(w); return <button key={w.id} disabled={!available} onClick={() => { update('window', w.id); setStep(3); }} className="rounded-2xl border border-white/10 bg-carbon-black p-6 text-left hover:border-honed-sage hover:bg-honed-sage/5 transition-colors disabled:opacity-35 disabled:cursor-not-allowed disabled:hover:border-white/10 disabled:hover:bg-carbon-black"><div className="font-serif text-2xl mb-2">{w.label}</div><div className="text-white/50">{w.time}</div>{!available && <div className="text-xs text-white/40 mt-2">This window has passed</div>}</button>; })}</div> : <div className="rounded-2xl border border-white/10 bg-carbon-black p-6"><p className="text-white/65 mb-4">Today’s arrival windows have ended. Choose another drop-off day.</p><button onClick={() => setStep(1)} className="inline-flex items-center gap-2 text-honed-sage font-semibold"><FiArrowLeft/> Choose another day</button></div>}</section>}
-
-        {step === 3 && <section className="rounded-3xl border border-white/10 bg-white/[0.025] p-6 md:p-9"><button onClick={() => setStep(2)} className="flex items-center gap-2 text-sm text-white/55 hover:text-white mb-6"><FiArrowLeft/> Change arrival</button><h2 className="font-serif text-2xl mb-2">Tell us where to send your confirmation</h2><p className="text-white/50 mb-7">{selectedDateLabel} · {selectedWindow?.label}</p><form onSubmit={submit} className="space-y-5"><div className="grid md:grid-cols-2 gap-5"><label className="text-sm">Name *<input required value={form.name} onChange={e => update('name', e.target.value)} className="mt-2 w-full px-4 py-3" placeholder="Your name" /></label><label className="text-sm">Mobile phone *<input required type="tel" value={form.phone} onChange={e => update('phone', e.target.value)} className="mt-2 w-full px-4 py-3" placeholder="(612) 555-1234" /></label></div><div className="grid md:grid-cols-2 gap-5"><label className="text-sm">Email *<input required type="email" value={form.email} onChange={e => update('email', e.target.value)} className="mt-2 w-full px-4 py-3" placeholder="you@example.com" /></label><label className="text-sm">About how many items need sharpening? *<input required type="number" min="1" max="100" value={form.quantity} onChange={e => update('quantity', e.target.value)} className="mt-2 w-full px-4 py-3" placeholder="Example: 6" /></label></div><label className="text-sm block">Anything we should know?<textarea rows="3" value={form.notes} onChange={e => update('notes', e.target.value)} className="mt-2 w-full px-4 py-3" placeholder="Knives, scissors, chips, broken tips, Japanese knives, special requests…" /></label><div className="rounded-2xl border border-white/10 bg-carbon-black/60 p-4 text-sm leading-6 text-white/55"><strong className="text-whetstone-cream">What happens next:</strong> Drop off during your reserved arrival window. Most standard orders are completed in about 36–48 hours. We’ll contact you when your items are actually ready for pickup.</div><p className="text-xs leading-5 text-white/40">By reserving, you agree to receive service-related messages about this order. Marketing messages are not enabled by this reservation.</p>{error && <div className="rounded-2xl border border-damascus-bronze/40 bg-damascus-bronze/10 p-4 text-sm"><strong>We couldn’t save this reservation yet.</strong><div className="text-white/65 mt-1">{error}</div><a href={SETMORE_FALLBACK} className="inline-block mt-3 underline text-whetstone-cream">Use our current booking page instead</a></div>}<button disabled={status === 'saving'} type="submit" className="w-full sm:w-auto inline-flex items-center justify-center gap-3 rounded-full bg-honed-sage px-7 py-4 font-bold text-white hover:bg-damascus-bronze disabled:opacity-60 transition-colors">{status === 'saving' ? 'Saving your arrival…' : <>Reserve My Arrival <FiArrowRight/></>}</button></form></section>}
-
-        {step === 4 && confirmation && <section className="rounded-3xl border border-honed-sage/30 bg-honed-sage/10 p-7 md:p-10 text-center"><div className="w-14 h-14 rounded-full bg-honed-sage text-white flex items-center justify-center mx-auto mb-5"><FiCheck size={26}/></div><p className="text-xs uppercase tracking-[0.24em] text-honed-sage font-bold mb-3">Arrival Reserved</p><h2 className="font-serif text-3xl md:text-4xl mb-4">You’re on the schedule.</h2><p className="text-white/70 leading-7 mb-4">{confirmation.date} · {confirmation.window}<br/>Reservation <strong className="text-white">{confirmation.id}</strong></p><p className="text-sm text-white/55 leading-6 max-w-xl mx-auto mb-6">Drop off during your reserved window. We’ll inspect and sharpen your items, then contact you when they’re ready. Most standard orders are completed in about 36–48 hours.</p><div className="inline-flex items-center gap-2 text-sm text-white/55"><FiShield/> Keep this confirmation handy for drop-off.</div></section>}
-      </div>
+  return <div className="bg-carbon-black text-whetstone-cream min-h-[calc(100dvh-72px)]">
+    <div className="mx-auto max-w-3xl px-4 sm:px-6 min-h-[calc(100dvh-72px)] flex flex-col">
+      {step < 8 && <div className="pt-4 sm:pt-6"><div className="h-1 rounded-full bg-white/10 overflow-hidden"><div className="h-full bg-honed-sage transition-all duration-300" style={{ width: `${(step / 7) * 100}%` }} /></div><div className="mt-2 text-center text-[10px] uppercase tracking-[0.2em] text-white/35">Book Your Arrival · Step {step} of 7</div></div>}
+      <main className="flex-1 flex items-center justify-center py-4 sm:py-8">
+        {step === 1 && card(<>{title('Book Your Arrival', 'What day works best?', 'The drop box is available daily from 8 AM to 8 PM.')}<div className="max-h-[55dvh] overflow-y-auto space-y-2 pr-1">{dates.map(d => option(d.label, d.available ? null : 'Today’s arrival windows have ended', () => choose('date', d.value, 2), !d.available))}</div></>)}
+        {step === 2 && card(<><button onClick={() => back(1)} className="text-white/45 hover:text-white text-sm inline-flex items-center gap-2 mb-4"><FiArrowLeft/> Change day</button>{title(selectedDateLabel, 'What part of the day works best?', 'Choose a general time first. We’ll narrow it down next.')}<div className="space-y-3">{dayparts.map(d => { const anyAvailable = d.slots.some(slotAvailable); return option(d.label, d.time, () => choose('window', d.id, 3), !anyAvailable); })}</div></>)}
+        {step === 3 && card(<><button onClick={() => back(2)} className="text-white/45 hover:text-white text-sm inline-flex items-center gap-2 mb-4"><FiArrowLeft/> Change time of day</button>{title(selectedDaypart?.label, 'About what time will you arrive?', 'No need to arrive at an exact time. Pick the one-hour window that best matches your plans.')}<div className="grid grid-cols-2 gap-3">{selectedDaypart?.slots.map(slot => option(slot, slotAvailable(slot) ? null : 'This window has passed', () => choose('slot', slot, 4), !slotAvailable(slot)))}</div></>)}
+        {step === 4 && card(<><button onClick={() => back(3)} className="text-white/45 hover:text-white text-sm inline-flex items-center gap-2 mb-4"><FiArrowLeft/> Change arrival time</button>{title('Your Bundle', 'About how many items?', 'An estimate is perfect. We’ll confirm everything after drop-off.')}<div className="flex items-center justify-center gap-7 my-8"><button aria-label="Remove one item" onClick={() => update('quantity', Math.max(1, Number(form.quantity) - 1))} className="w-14 h-14 rounded-full border border-white/15 flex items-center justify-center hover:border-honed-sage"><FiMinus/></button><div className="font-serif text-6xl min-w-20 text-center">{form.quantity}</div><button aria-label="Add one item" onClick={() => update('quantity', Math.min(100, Number(form.quantity) + 1))} className="w-14 h-14 rounded-full border border-white/15 flex items-center justify-center hover:border-honed-sage"><FiPlus/></button></div><button onClick={() => setStep(5)} className="w-full rounded-full bg-honed-sage px-6 py-4 font-bold hover:bg-damascus-bronze transition">Continue <FiArrowRight className="inline ml-2"/></button></>)}
+        {step === 5 && card(<><button onClick={() => back(4)} className="text-white/45 hover:text-white text-sm inline-flex items-center gap-2 mb-4"><FiArrowLeft/> Change item count</button>{title('One Quick Question', 'Anything unusual we should know about?', 'Most customers can move right through.')}<div className="space-y-3">{option('Nope, standard sharpening', 'Nothing special to add.', () => { update('hasNote', false); update('notes', ''); setStep(6); })}{option('Yes, I have a note', 'Repairs, damage, special requests or questions.', () => update('hasNote', true))}</div>{form.hasNote && <div className="mt-4"><textarea autoFocus rows="4" value={form.notes} onChange={e => update('notes', e.target.value)} className="w-full px-4 py-3 rounded-2xl" placeholder="Tell us anything you’d like us to know…"/><button onClick={() => setStep(6)} className="mt-3 w-full rounded-full bg-honed-sage px-6 py-4 font-bold">Continue <FiArrowRight className="inline ml-2"/></button></div>}</>)}
+        {step === 6 && card(<><button onClick={() => back(5)} className="text-white/45 hover:text-white text-sm inline-flex items-center gap-2 mb-4"><FiArrowLeft/> Back</button>{title('Almost There', 'Who are we sharpening for?', 'We’ll use this information only to manage your order and keep you updated.')}<div className="space-y-3"><input autoComplete="name" value={form.name} onChange={e => update('name', e.target.value)} className="w-full px-4 py-3.5 rounded-xl" placeholder="Your name"/><input type="tel" inputMode="tel" autoComplete="tel" value={form.phone} onChange={e => update('phone', e.target.value)} className="w-full px-4 py-3.5 rounded-xl" placeholder="Mobile phone"/><input type="email" inputMode="email" autoComplete="email" value={form.email} onChange={e => update('email', e.target.value)} className="w-full px-4 py-3.5 rounded-xl" placeholder="Email address"/><button disabled={!form.name.trim() || !form.phone.trim() || !form.email.trim()} onClick={() => setStep(7)} className="w-full rounded-full bg-honed-sage px-6 py-4 font-bold disabled:opacity-40">Review My Arrival <FiArrowRight className="inline ml-2"/></button></div></>)}
+        {step === 7 && card(<><button onClick={() => back(6)} className="text-white/45 hover:text-white text-sm inline-flex items-center gap-2 mb-4"><FiArrowLeft/> Edit details</button>{title('Ready to Go', 'Confirm your arrival', 'One quick look, then you’re on the schedule.')}<div className="rounded-2xl bg-carbon-black border border-white/10 divide-y divide-white/10 mb-5"><div className="p-4"><span className="text-white/40 text-xs uppercase tracking-wider">Arrival</span><div className="font-semibold mt-1">{selectedDateLabel}</div><div className="text-honed-sage">{form.slot}</div></div><div className="p-4 flex justify-between"><span className="text-white/50">Items</span><strong>{form.quantity}</strong></div>{form.hasNote && form.notes && <div className="p-4 text-sm text-white/60">“{form.notes}”</div>}</div><form onSubmit={submit}><p className="text-xs leading-5 text-white/40 mb-4">By reserving, you agree to receive service-related messages about this order. Marketing messages are not enabled by this reservation.</p>{error && <div className="rounded-2xl border border-damascus-bronze/40 bg-damascus-bronze/10 p-4 text-sm mb-4"><strong>We couldn’t save this reservation yet.</strong><div className="text-white/65 mt-1">{error}</div><a href={SETMORE_FALLBACK} className="inline-block mt-3 underline">Use our current booking page instead</a></div>}<button disabled={status === 'saving'} type="submit" className="w-full rounded-full bg-honed-sage px-6 py-4 font-bold hover:bg-damascus-bronze disabled:opacity-60 transition">{status === 'saving' ? 'Saving your arrival…' : <>Reserve My Arrival <FiArrowRight className="inline ml-2"/></>}</button></form></>)}
+        {step === 8 && confirmation && card(<div className="text-center"><div className="w-14 h-14 rounded-full bg-honed-sage flex items-center justify-center mx-auto mb-5"><FiCheck size={26}/></div><p className="text-xs uppercase tracking-[0.24em] text-honed-sage font-bold mb-2">Arrival Reserved</p><h2 className="font-serif text-3xl sm:text-4xl mb-4">You’re on the schedule.</h2><p className="text-white/70 leading-7">{confirmation.date}<br/><strong className="text-white">{confirmation.slot}</strong> · {confirmation.quantity} items</p><div className="my-5 rounded-2xl border border-white/10 bg-carbon-black p-4"><span className="text-xs uppercase tracking-wider text-white/40">Reservation</span><div className="font-serif text-3xl tracking-widest mt-1">{confirmation.id}</div></div><p className="text-sm text-white/55 leading-6">Drop off during your expected arrival window. If you’re a little early or late, that’s okay. We’ll contact you when your items are ready; most standard orders take about 36–48 hours.</p><div className="mt-5 inline-flex items-center gap-2 text-xs text-white/45"><FiShield/> Keep this confirmation handy for drop-off.</div></div>)}
+      </main>
     </div>
-  );
+  </div>;
 }
