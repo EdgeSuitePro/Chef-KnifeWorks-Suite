@@ -1,9 +1,15 @@
+import { createHash, randomBytes } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 
 const json = (res, status, body) => {
   res.status(status).setHeader('Content-Type', 'application/json');
   res.end(JSON.stringify(body));
 };
+
+const normalizePhone = (value) => String(value || '').replace(/\D/g, '');
+const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
+const firstNameFrom = (name) => String(name || '').trim().split(/\s+/)[0] || null;
+const hashToken = (token) => createHash('sha256').update(token).digest('hex');
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -19,8 +25,27 @@ export default async function handler(req, res) {
   }
 
   const { customer, reservation } = req.body || {};
-  if (!customer?.name || !customer?.email || !customer?.phone || !reservation?.id || !reservation?.selectedDate || !reservation?.selectedSlot) {
-    return json(res, 400, { success: false, error: 'Missing required reservation details.' });
+  const estimatedItemCount = Number.parseInt(reservation?.estimatedItemCount, 10);
+  const arrivalWindow = reservation?.arrivalWindow;
+
+  if (
+    !customer?.name ||
+    !customer?.email ||
+    !customer?.phone ||
+    !reservation?.id ||
+    !reservation?.selectedDate ||
+    !['morning', 'midday', 'evening'].includes(arrivalWindow) ||
+    !Number.isInteger(estimatedItemCount) ||
+    estimatedItemCount < 1 ||
+    estimatedItemCount > 100
+  ) {
+    return json(res, 400, { success: false, error: 'Missing or invalid reservation details.' });
+  }
+
+  const normalizedPhone = normalizePhone(customer.phone);
+  const normalizedEmail = normalizeEmail(customer.email);
+  if (normalizedPhone.length < 10) {
+    return json(res, 400, { success: false, error: 'Please enter a valid mobile phone number.' });
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
@@ -28,50 +53,92 @@ export default async function handler(req, res) {
   });
 
   try {
-    const normalizedEmail = String(customer.email).trim().toLowerCase();
-    const normalizedPhone = String(customer.phone).trim();
-
-    const { data: existingCustomer, error: lookupError } = await supabase
-      .from('customers')
+    const { data: business, error: businessError } = await supabase
+      .from('businesses')
       .select('id')
-      .eq('email', normalizedEmail)
-      .maybeSingle();
+      .eq('slug', 'chef-knifeworks')
+      .eq('active', true)
+      .single();
 
-    if (lookupError) throw lookupError;
-
-    let customerId = existingCustomer?.id;
-    if (!customerId) {
-      customerId = crypto.randomUUID();
-      const { error: customerError } = await supabase.from('customers').insert({
-        id: customerId,
-        name: String(customer.name).trim(),
-        email: normalizedEmail,
-        phone: normalizedPhone
-      });
-      if (customerError) throw customerError;
-    } else {
-      const { error: customerUpdateError } = await supabase
-        .from('customers')
-        .update({ name: String(customer.name).trim(), phone: normalizedPhone })
-        .eq('id', customerId);
-      if (customerUpdateError) throw customerUpdateError;
+    if (businessError || !business?.id) {
+      throw businessError || new Error('Chef KnifeWorks business record not found.');
     }
 
-    const { error: reservationError } = await supabase.from('reservations').insert({
-      id: reservation.id,
-      customer_id: customerId,
-      drop_off_date: reservation.selectedDate,
-      drop_off_time: reservation.selectedSlot,
-      pickup_date: reservation.pickupDate || null,
-      knife_quantity: reservation.knifeQty || 'Not provided',
-      notes: reservation.notes || '',
-      status: 'booked',
-      source: reservation.source || 'ckw-website'
+    const { data: existingClient, error: clientLookupError } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('business_id', business.id)
+      .eq('normalized_phone', normalizedPhone)
+      .maybeSingle();
+
+    if (clientLookupError) throw clientLookupError;
+
+    let clientId = existingClient?.id;
+    const clientValues = {
+      business_id: business.id,
+      name: String(customer.name).trim(),
+      first_name: firstNameFrom(customer.name),
+      email: normalizedEmail,
+      normalized_email: normalizedEmail,
+      phone: String(customer.phone).trim(),
+      normalized_phone: normalizedPhone,
+      service_message_consent_at: new Date().toISOString()
+    };
+
+    if (!clientId) {
+      const { data: createdClient, error: clientCreateError } = await supabase
+        .from('clients')
+        .insert(clientValues)
+        .select('id')
+        .single();
+      if (clientCreateError) throw clientCreateError;
+      clientId = createdClient.id;
+    } else {
+      const { error: clientUpdateError } = await supabase
+        .from('clients')
+        .update(clientValues)
+        .eq('id', clientId)
+        .eq('business_id', business.id);
+      if (clientUpdateError) throw clientUpdateError;
+    }
+
+    const orderPass = randomBytes(24).toString('base64url');
+    const { data: createdOrder, error: workOrderError } = await supabase
+      .from('work_orders')
+      .insert({
+        business_id: business.id,
+        client_id: clientId,
+        public_code: reservation.id,
+        access_token_hash: hashToken(orderPass),
+        status: 'booked',
+        source: reservation.source || 'ckw-website',
+        scheduled_date: reservation.selectedDate,
+        arrival_window: arrivalWindow,
+        estimated_item_count: estimatedItemCount,
+        customer_notes: reservation.notes || null
+      })
+      .select('id, public_code')
+      .single();
+
+    if (workOrderError) throw workOrderError;
+
+    const { error: eventError } = await supabase.from('work_order_events').insert({
+      business_id: business.id,
+      work_order_id: createdOrder.id,
+      event_type: 'booked',
+      to_status: 'booked',
+      actor_type: 'customer',
+      note: 'Booked from chefknifeworks.com/appointments',
+      metadata: { source: reservation.source || 'ckw-website' }
     });
 
-    if (reservationError) throw reservationError;
+    if (eventError) console.error('Work order event logging failed:', eventError);
 
-    return json(res, 201, { success: true, reservationId: reservation.id });
+    return json(res, 201, {
+      success: true,
+      reservationId: createdOrder.public_code,
+      orderPass
+    });
   } catch (error) {
     console.error('Reservation booking failed:', error);
     return json(res, 500, { success: false, error: 'We could not save this reservation.' });
