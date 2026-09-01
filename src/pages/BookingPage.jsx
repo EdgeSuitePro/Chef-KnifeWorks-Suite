@@ -58,9 +58,9 @@ export default function BookingPage() {
         body: JSON.stringify({ customer: { name: form.name, phone: form.phone, email: form.email }, reservation })
       });
       const contentType = response.headers.get('content-type') || '';
-      if (!response.ok || !contentType.includes('application/json')) throw new Error('Booking service is not connected yet.');
+      if (!contentType.includes('application/json')) throw new Error('Booking API did not return JSON.');
       const data = await response.json();
-      if (!data?.success) throw new Error('Booking service did not confirm the reservation.');
+      if (!response.ok || !data?.success) throw new Error(data?.error || `Booking request failed (${response.status}).`);
       setConfirmation({ id: data.reservationId || id, date: selectedDateLabel, window: selectedWindow.label, pickup });
       setStatus('saved');
       setStep(4);
