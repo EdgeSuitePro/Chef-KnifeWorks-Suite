@@ -10,6 +10,8 @@ const normalizePhone = (value) => String(value || '').replace(/\D/g, '');
 const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 const firstNameFrom = (name) => String(name || '').trim().split(/\s+/)[0] || null;
 const hashToken = (token) => createHash('sha256').update(token).digest('hex');
+const validDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(String(value || ''));
+const validEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || ''));
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -27,25 +29,22 @@ export default async function handler(req, res) {
   const { customer, reservation } = req.body || {};
   const estimatedItemCount = Number.parseInt(reservation?.estimatedItemCount, 10);
   const arrivalWindow = reservation?.arrivalWindow;
+  const customerName = String(customer?.name || '').trim();
+  const normalizedPhone = normalizePhone(customer?.phone);
+  const normalizedEmail = normalizeEmail(customer?.email);
 
   if (
-    !customer?.name ||
-    !customer?.email ||
-    !customer?.phone ||
+    customerName.length < 2 ||
+    !validEmail(normalizedEmail) ||
+    normalizedPhone.length < 10 ||
     !reservation?.id ||
-    !reservation?.selectedDate ||
+    !validDate(reservation?.selectedDate) ||
     !['morning', 'midday', 'evening'].includes(arrivalWindow) ||
     !Number.isInteger(estimatedItemCount) ||
     estimatedItemCount < 1 ||
     estimatedItemCount > 100
   ) {
-    return json(res, 400, { success: false, error: 'Missing or invalid reservation details.' });
-  }
-
-  const normalizedPhone = normalizePhone(customer.phone);
-  const normalizedEmail = normalizeEmail(customer.email);
-  if (normalizedPhone.length < 10) {
-    return json(res, 400, { success: false, error: 'Please enter a valid mobile phone number.' });
+    return json(res, 400, { success: false, error: 'Please check your reservation details and try again.' });
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
@@ -76,8 +75,8 @@ export default async function handler(req, res) {
     let clientId = existingClient?.id;
     const clientValues = {
       business_id: business.id,
-      name: String(customer.name).trim(),
-      first_name: firstNameFrom(customer.name),
+      name: customerName,
+      first_name: firstNameFrom(customerName),
       email: normalizedEmail,
       normalized_email: normalizedEmail,
       phone: String(customer.phone).trim(),
