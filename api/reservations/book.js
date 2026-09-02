@@ -12,6 +12,20 @@ const firstNameFrom = (name) => String(name || '').trim().split(/\s+/)[0] || nul
 const hashToken = (token) => createHash('sha256').update(token).digest('hex');
 const validDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(String(value || ''));
 const validEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || ''));
+const slotMap = {
+  '8–9 AM': { stored: '08:00-09:00', daypart: 'morning' },
+  '9–10 AM': { stored: '09:00-10:00', daypart: 'morning' },
+  '10–11 AM': { stored: '10:00-11:00', daypart: 'morning' },
+  '11 AM–12 PM': { stored: '11:00-12:00', daypart: 'morning' },
+  '12–1 PM': { stored: '12:00-13:00', daypart: 'midday' },
+  '1–2 PM': { stored: '13:00-14:00', daypart: 'midday' },
+  '2–3 PM': { stored: '14:00-15:00', daypart: 'midday' },
+  '3–4 PM': { stored: '15:00-16:00', daypart: 'midday' },
+  '4–5 PM': { stored: '16:00-17:00', daypart: 'evening' },
+  '5–6 PM': { stored: '17:00-18:00', daypart: 'evening' },
+  '6–7 PM': { stored: '18:00-19:00', daypart: 'evening' },
+  '7–8 PM': { stored: '19:00-20:00', daypart: 'evening' }
+};
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -29,6 +43,7 @@ export default async function handler(req, res) {
   const { customer, reservation } = req.body || {};
   const estimatedItemCount = Number.parseInt(reservation?.estimatedItemCount, 10);
   const arrivalWindow = reservation?.arrivalWindow;
+  const slot = slotMap[reservation?.selectedSlot];
   const customerName = String(customer?.name || '').trim();
   const normalizedPhone = normalizePhone(customer?.phone);
   const normalizedEmail = normalizeEmail(customer?.email);
@@ -40,6 +55,8 @@ export default async function handler(req, res) {
     !reservation?.id ||
     !validDate(reservation?.selectedDate) ||
     !['morning', 'midday', 'evening'].includes(arrivalWindow) ||
+    !slot ||
+    slot.daypart !== arrivalWindow ||
     !Number.isInteger(estimatedItemCount) ||
     estimatedItemCount < 1 ||
     estimatedItemCount > 100
@@ -110,9 +127,10 @@ export default async function handler(req, res) {
         public_code: reservation.id,
         access_token_hash: hashToken(orderPass),
         status: 'booked',
-        source: reservation.source || 'ckw-website',
+        source: 'ckw-website',
         scheduled_date: reservation.selectedDate,
         arrival_window: arrivalWindow,
+        arrival_slot: slot.stored,
         estimated_item_count: estimatedItemCount,
         customer_notes: reservation.notes || null
       })
@@ -128,7 +146,7 @@ export default async function handler(req, res) {
       to_status: 'booked',
       actor_type: 'customer',
       note: 'Booked from chefknifeworks.com/appointments',
-      metadata: { source: reservation.source || 'ckw-website' }
+      metadata: { source: 'ckw-website', arrival_slot: slot.stored }
     });
 
     if (eventError) console.error('Work order event logging failed:', eventError);
