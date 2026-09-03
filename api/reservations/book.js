@@ -1,5 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
+import { buildBookingConfirmation } from '../rdcom/booking-confirmation.js';
+import { sendTransactionalEmail } from '../rdcom/send-transactional-email.js';
 
 const json = (res, status, body) => {
   res.status(status).setHeader('Content-Type', 'application/json');
@@ -151,10 +153,36 @@ export default async function handler(req, res) {
 
     if (eventError) console.error('Work order event logging failed:', eventError);
 
+    let confirmationEmail = 'not_configured';
+    if (process.env.RDCOM_ACCOUNT_CODE && process.env.RDCOM_API_TOKEN && process.env.RDCOM_SENDER_EMAIL) {
+      try {
+        const message = buildBookingConfirmation({
+          customerName,
+          scheduledDate: reservation.selectedDate,
+          arrivalSlot: slot.stored,
+          estimatedItemCount
+        });
+        await sendTransactionalEmail({
+          to: normalizedEmail,
+          subject: message.subject,
+          html: message.html,
+          text: message.text
+        });
+        confirmationEmail = 'sent';
+      } catch (messageError) {
+        confirmationEmail = 'failed';
+        console.error('RDcom booking confirmation failed:', {
+          message: messageError?.message,
+          status: messageError?.status || null
+        });
+      }
+    }
+
     return json(res, 201, {
       success: true,
       reservationId: createdOrder.public_code,
-      orderPass
+      orderPass,
+      confirmationEmail
     });
   } catch (error) {
     console.error('Reservation booking failed:', error);
