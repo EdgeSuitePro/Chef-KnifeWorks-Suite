@@ -10,7 +10,6 @@ export const sendTransactionalEmail = async ({
   to,
   subject,
   html,
-  text,
   senderEmail,
   senderName = 'Chef KnifeWorks'
 }) => {
@@ -27,8 +26,7 @@ export const sendTransactionalEmail = async ({
       sender_address: from,
       sender_name: senderName,
       subject: safeSubject,
-      content_html: contentHtml,
-      ...(text ? { content_text: text } : {})
+      content_html: contentHtml
     },
     specific: [
       {
