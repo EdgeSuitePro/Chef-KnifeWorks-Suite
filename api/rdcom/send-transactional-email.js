@@ -1,4 +1,4 @@
-const RDCOM_API_BASE = 'https://api.rdcom.com';
+const RDCOM_API_BASE = String(process.env.RDCOM_API_BASE || 'https://platform.rdcom.com').replace(/\/$/, '');
 
 const required = (value, name) => {
   const normalized = String(value || '').trim();
@@ -18,15 +18,17 @@ export const sendTransactionalEmail = async ({
   const apiToken = required(process.env.RDCOM_API_TOKEN, 'RDCOM_API_TOKEN');
   const recipient = required(to, 'Recipient email');
   const from = required(senderEmail || process.env.RDCOM_SENDER_EMAIL, 'RDCOM_SENDER_EMAIL');
+  const safeSubject = required(subject, 'Email subject');
+  const contentHtml = required(html, 'Email HTML content');
 
   const endpoint = `${RDCOM_API_BASE}/api/v2/${encodeURIComponent(accountCode)}/email/messages/transactional/`;
   const payload = {
     default: {
-      from,
-      from_name: senderName,
-      subject,
-      content: html,
-      content_type: 'text/html'
+      sender_address: from,
+      sender_name: senderName,
+      subject: safeSubject,
+      content_html: contentHtml,
+      ...(text ? { content_text: text } : {})
     },
     specific: [
       {
@@ -60,5 +62,5 @@ export const sendTransactionalEmail = async ({
     throw error;
   }
 
-  return { ok: true, status: response.status, body, textFallback: text };
+  return { ok: true, status: response.status, body };
 };
