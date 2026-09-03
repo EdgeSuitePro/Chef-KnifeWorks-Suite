@@ -14,6 +14,11 @@ const firstNameFrom = (name) => String(name || '').trim().split(/\s+/)[0] || nul
 const hashToken = (token) => createHash('sha256').update(token).digest('hex');
 const validDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(String(value || ''));
 const validEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || ''));
+const safeLogBody = (value) => {
+  if (value == null) return null;
+  const text = typeof value === 'string' ? value : JSON.stringify(value);
+  return text.slice(0, 1200);
+};
 const slotMap = {
   '8–9 AM': { stored: '08:00-09:00', daypart: 'morning' },
   '9–10 AM': { stored: '09:00-10:00', daypart: 'morning' },
@@ -173,7 +178,8 @@ export default async function handler(req, res) {
         confirmationEmail = 'failed';
         console.error('RDcom booking confirmation failed:', {
           message: messageError?.message,
-          status: messageError?.status || null
+          status: messageError?.status || null,
+          responseBody: safeLogBody(messageError?.responseBody)
         });
       }
     }
