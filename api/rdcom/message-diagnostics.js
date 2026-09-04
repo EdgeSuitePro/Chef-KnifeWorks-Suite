@@ -17,14 +17,7 @@ async function rdcomGet(path, token) {
     body = { raw: text.slice(0, 1000) };
   }
 
-  if (!response.ok) {
-    const error = new Error(`RDcom diagnostic request failed with HTTP ${response.status}.`);
-    error.status = response.status;
-    error.body = body;
-    throw error;
-  }
-
-  return body;
+  return { ok: response.ok, status: response.status, body };
 }
 
 function sanitizeMessages(payload) {
@@ -52,6 +45,13 @@ function sanitizeEvents(payload) {
   }));
 }
 
+function sanitizePermissions(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return payload;
+  return Object.fromEntries(
+    Object.entries(payload).filter(([key]) => key.startsWith('can_') || key === 'account' || key === 'user')
+  );
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
@@ -65,9 +65,11 @@ export default async function handler(req, res) {
     return res.status(503).json({ error: 'RDcom is not configured.' });
   }
 
+  const encodedAccount = encodeURIComponent(accountCode);
+
   try {
-    const encodedAccount = encodeURIComponent(accountCode);
-    const [messages, events] = await Promise.all([
+    const [permissionsResult, messagesResult, eventsResult] = await Promise.all([
+      rdcomGet(`/api/v2/${encodedAccount}/user-permissions/`, apiToken),
       rdcomGet(`/api/v2/${encodedAccount}/email/messages/`, apiToken),
       rdcomGet(`/api/v2/${encodedAccount}/email/messages/events/`, apiToken)
     ]);
@@ -75,18 +77,21 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json({
       ok: true,
-      messages: sanitizeMessages(messages),
-      events: sanitizeEvents(events)
+      permissions: {
+        status: permissionsResult.status,
+        data: permissionsResult.ok ? sanitizePermissions(permissionsResult.body) : permissionsResult.body
+      },
+      messages: {
+        status: messagesResult.status,
+        data: messagesResult.ok ? sanitizeMessages(messagesResult.body) : messagesResult.body
+      },
+      events: {
+        status: eventsResult.status,
+        data: eventsResult.ok ? sanitizeEvents(eventsResult.body) : eventsResult.body
+      }
     });
   } catch (error) {
-    console.error('RDcom diagnostics failed:', {
-      message: error.message,
-      status: error.status || null
-    });
-    return res.status(error.status || 502).json({
-      error: 'Unable to retrieve RDcom diagnostics.',
-      status: error.status || null,
-      details: error.body || null
-    });
+    console.error('RDcom diagnostics failed:', { message: error.message });
+    return res.status(502).json({ error: 'Unable to retrieve RDcom diagnostics.' });
   }
 }
