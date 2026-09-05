@@ -89,7 +89,14 @@ app.use(express.json({ limit: '10mb' }));
 // Auth
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
-  if (username === 'admin' && password === 'SharpKnives2024!') {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminPassword) {
+    console.error('ADMIN_PASSWORD is not configured');
+    return res.status(503).json({ success: false, message: 'Authentication is not configured' });
+  }
+
+  if (username === 'admin' && password === adminPassword) {
     const token = uuidv4();
     res.json({ success: true, token, user: { username: 'admin', role: 'admin' } });
   } else {
